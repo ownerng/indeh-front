@@ -50,7 +50,7 @@ export const authService = {
             throw error;
         }
     },
-     async updateUserById(id:number,data: {username: string; role: string}) {
+     async updateUserById(id:number,data: {username: string; role: string, password: string}) {
         try {
             const response = await apiInstance.put(ENDPOINTS.AUTH.UPDATEBYID(id), data);
             return response.status;

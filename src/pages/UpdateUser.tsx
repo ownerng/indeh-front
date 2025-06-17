@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 export default function UpdateUser() {
     const { id } = useParams();
     const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
     const [role, setRole] = useState<UserRole>(UserRole.PROFESOR); // Default to PROFESOR
     const navigate = useNavigate();
     // State to manage the loading state during the creation process
@@ -44,7 +45,8 @@ export default function UpdateUser() {
             // API call to create user
             const response = await authService.updateUserById(Number(id), {
                 username,
-                role
+                role,
+                password
             });
             if (response === 200 || response === 201) {
                 // Show success alert
@@ -130,6 +132,23 @@ export default function UpdateUser() {
                                 <option value={UserRole.PROFESOR}>Profesor</option>
                                 <option value={UserRole.EJECUTIVO}>Ejecutivo</option>
                             </select>
+                        </div>
+
+                         <div className="mb-4">
+                            <label htmlFor="username" className="block text-gray-700 text-sm font-bold mb-2">
+                                Contraseña *
+                            </label>
+                            <input
+                                type="text"
+                                id="password"
+                                className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                placeholder="Ingresa el nombre de usuario"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                disabled={loading}
+                                minLength={3}
+                                required
+                            />
                         </div>
 
                         {/* Submit Button */}
