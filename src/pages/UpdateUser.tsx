@@ -134,19 +134,19 @@ export default function UpdateUser() {
                             </select>
                         </div>
 
-                         <div className="mb-4">
-                            <label htmlFor="username" className="block text-gray-700 text-sm font-bold mb-2">
+                        <div className="mb-4">
+                            <label htmlFor="password" className="block text-gray-700 text-sm font-bold mb-2">
                                 Contraseña *
                             </label>
                             <input
-                                type="text"
+                                type="password"
                                 id="password"
                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Ingresa el nombre de usuario"
+                                placeholder="Ingresa tu contraseña"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 disabled={loading}
-                                minLength={3}
+                                minLength={8}
                                 required
                             />
                         </div>
