@@ -11,11 +11,9 @@ import Corte3 from "../pages/Corte3";
 import HomeTeacher from "../pages/HomeTeacher";
 import CreateUser from "../pages/CreateUser";
 import { CreateSubject } from "../pages/CreateSubject";
-import { AssingSubject } from "../pages/AssignSubject";
 import UpdateStudentForm from "../pages/UpdateStudent";
 import UpdateUser from "../pages/UpdateUser";
 import { UpdateSubject } from "../pages/updateSubject";
-import { UpdateAssingSubject } from "../pages/UpdateAssignSubject";
 
 
 export const AppRouter = createBrowserRouter([
@@ -55,15 +53,7 @@ export const AppRouter = createBrowserRouter([
                 path: "/admin/new-subject/:id/update",
                 element: <AppLayout><UpdateSubject /></AppLayout>
 
-            },
-            {
-                path: "/admin/assign-subject",
-                element: <AppLayout><AssingSubject /></AppLayout>
-            },
-            {
-                path: "/admin/assign-subject/:id/update",
-                element: <AppLayout><UpdateAssingSubject /></AppLayout>
-            },
+            }
         ]
     },
     {

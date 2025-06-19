@@ -42,11 +42,6 @@ export default function Sidebar({ userRole}: SidebarProps) {
             path: "/admin/new-subject"
           },
           {
-            label: "Asignar Asignatura",
-            icon: "✍️",
-            path: "/admin/assign-subject"
-          },
-          {
             label: "Crear Estudiante",
             icon: "👨‍🎓",
             path: "/admin/new-student"

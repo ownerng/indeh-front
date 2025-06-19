@@ -8,7 +8,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 
 export function UpdateSubject() {
-    const {id} = useParams();
+    const { id } = useParams();
     const [subjectName, setSubjectName] = useState('');
     const [selectedProfessorId, setSelectedProfessorId] = useState<number | ''>('');
     const [professors, setProfessors] = useState<Professor[]>([]);
@@ -23,9 +23,12 @@ export function UpdateSubject() {
                 setLoading(true);
                 const res = await SubjectsService.getSubjectById(Number(id));
                 setSubjectName(res.nombre);
-                setSelectedProfessorId(res.profesor.id);
+                if (res.profesor && res.profesor.id) {
+                    setSelectedProfessorId(res.profesor.id);
+                } else {
+                    setSelectedProfessorId('');
+                }
                 const professorsData: Professor[] = await authService.listProfesores();
-
                 setProfessors(professorsData);
             } catch (err) {
                 console.error("Failed to fetch professors:", err);
@@ -73,7 +76,7 @@ export function UpdateSubject() {
                 id_profesor: Number(selectedProfessorId)
             };
 
-            const response = await SubjectsService.updateSubjectById(Number(id),subjectData);
+            const response = await SubjectsService.updateSubjectById(Number(id), subjectData);
             if (response === 200 || response === 201) {
 
                 await Swal.fire({

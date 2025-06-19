@@ -34,7 +34,10 @@ export const SubjectCard = ({ subject, onUserAction }: SubjectCardProps ) => {
     return (
         <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-md mb-3 hover:shadow-lg transition-shadow">
             <div className="font-medium text-gray-800 w-1/3">{subject.nombre}</div>
-            <div className="text-gray-600 w-1/3 text-center font-medium">{subject.profesor.username}</div>
+            <div className="text-gray-600 w-1/3 text-center font-medium">{subject.jornada}</div>
+            <div className="text-gray-600 w-1/3 text-center font-medium">
+                {subject.profesor ? subject.profesor.username : "No asignado"}
+            </div>
             <div className="flex space-x-2 w-1/3 justify-end">
                 {userRole === UserRole.EJECUTIVO && (
                     <>
@@ -43,10 +46,9 @@ export const SubjectCard = ({ subject, onUserAction }: SubjectCardProps ) => {
                         </button>
                         <button onClick={deleteStudent} className="p-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors">
                             <Trash size={18} />
-                        </button></>
-                )
-                }
-
+                        </button>
+                    </>
+                )}
             </div>
         </div>
     );

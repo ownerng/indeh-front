@@ -71,7 +71,7 @@ export default function Corte2() {
                 filteredStudents.length > 0 ? (
                   filteredStudents.map(s => (
                     <div className="m-5">
-                      <h2 className="text-lg font-semibold text-gray-600 my-5">{s.nombre_asignatura}</h2>
+                                            <h2 className="text-lg font-semibold text-gray-600 my-5">{s.nombre_asignatura} - {s.jornada.toUpperCase()}</h2>
                       {
                         s.students.length > 0 ? (
                           <>

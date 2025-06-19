@@ -1,3 +1,4 @@
+import type { Jornada } from "../enums/Jornada";
 import type { UserRole } from "../enums/UserRole";
 
 
@@ -20,31 +21,31 @@ export interface Calification {
 export interface Student {
     id: number,
     nombres_apellidos: string,
-    tipo_documento?: "CC" | "TI",
+    tipo_documento: "CC" | "TI",
     numero_documento: string,
-    fecha_expedicion_documento: Date,
+    expedicion_documento: string,
     fecha_nacimiento: Date,
     telefono: string,
-    sexo?: "M" | "F",
+    sexo: "M" | "F",
     direccion: string,
     eps: string,
-    tipo_sangre?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+    tipo_sangre: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-",
     email: string,
     estado: "Activo" | "Inactivo",
     fecha_creacion: Date,
-    subsidio: string,
-    categoria: string,
-    modalidad: string,
+    subsidio: string | null,
+    categoria: string | null,
+    jornada: Jornada,
     grado: string,
-    discapacidad: string,
+    discapacidad: string | null,
     fecha_modificacion: Date,
     nombres_apellidos_acudiente: string,
     numero_documento_acudiente: string,
-    fecha_expedicion_documento_acudiente: Date,
+    expedicion_documento_acudiente: string,
     telefono_acudiente: string,
     direccion_acudiente: string,
-    contacto_emergencia: string,
-    empresa_acudiente: string,
+    email_acudiente: string,
+    empresa_acudiente: string | null,
     nombres_apellidos_familiar1: string | null,
     numero_documento_familiar1: string | null,
     telefono_familiar1: string | null,
@@ -74,31 +75,31 @@ export interface CreateCalificationDTO {
 export interface updateStudentDTO {
     id: number,
     nombres_apellidos: string,
-    tipo_documento?: "CC" | "TI",
+    tipo_documento: "CC" | "TI",
     numero_documento: string,
-    fecha_expedicion_documento: Date,
+    expedicion_documento: string,
     fecha_nacimiento: Date,
     telefono: string,
-    sexo?: "M" | "F",
+    sexo: "M" | "F",
     direccion: string,
     eps: string,
-    tipo_sangre?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+    tipo_sangre: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-",
     email: string,
     estado: "Activo" | "Inactivo",
     fecha_creacion: Date,
-    subsidio: string,
-    categoria: string,
-    modalidad: string,
+    subsidio: string | null,
+    categoria: string | null,
+    jornada: Jornada,
     grado: string,
-    discapacidad: string,
+    discapacidad: string | null,
     fecha_modificacion: Date,
     nombres_apellidos_acudiente: string,
     numero_documento_acudiente: string,
-    fecha_expedicion_documento_acudiente: Date,
+    expedicion_documento_acudiente: string,
     telefono_acudiente: string,
     direccion_acudiente: string,
-    contacto_emergencia: string,
-    empresa_acudiente: string,
+    email_acudiente: string,
+    empresa_acudiente: string | null,
     nombres_apellidos_familiar1: string | null,
     numero_documento_familiar1: string | null,
     telefono_familiar1: string | null,
@@ -113,32 +114,32 @@ export interface updateStudentDTO {
 
 
 export interface CreateStudentDTO {
-    nombres_apellidos: string,
-    tipo_documento?: "CC" | "TI",
+        nombres_apellidos: string,
+    tipo_documento: "CC" | "TI",
     numero_documento: string,
-    fecha_expedicion_documento: Date,
+    expedicion_documento: string,
     fecha_nacimiento: Date,
     telefono: string,
-    sexo?: "M" | "F",
+    sexo: "M" | "F",
     direccion: string,
     eps: string,
-    tipo_sangre?: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
+    tipo_sangre: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-",
     email: string,
     estado: "Activo" | "Inactivo",
     fecha_creacion: Date,
-    subsidio: string,
-    categoria: string,
-    modalidad: string,
+    subsidio: string | null,
+    categoria: string | null,
+    jornada: Jornada,
     grado: string,
-    discapacidad: string,
+    discapacidad: string | null,
     fecha_modificacion: Date,
     nombres_apellidos_acudiente: string,
     numero_documento_acudiente: string,
-    fecha_expedicion_documento_acudiente: Date,
+    expedicion_documento_acudiente: string,
     telefono_acudiente: string,
     direccion_acudiente: string,
-    contacto_emergencia: string,
-    empresa_acudiente: string,
+    email_acudiente: string,
+    empresa_acudiente: string | null,
     nombres_apellidos_familiar1: string | null,
     numero_documento_familiar1: string | null,
     telefono_familiar1: string | null,
@@ -179,6 +180,7 @@ export interface StudentCorte {
 }
 export interface StudentsByTeacherId {
   nombre_asignatura: string;
+  jornada: Jornada;
   students: StudentCorte[]
 }
 export interface BodyCorte1 {
@@ -237,8 +239,9 @@ export interface Subject {
 export interface SubjectResponse {
   id: number;
   nombre: string;
+  jornada: Jornada;
   fecha_creacion: Date;
-  profesor:Professor
+  profesor:Professor | null;
 }
 export interface ScoreResponse {
   id: number;

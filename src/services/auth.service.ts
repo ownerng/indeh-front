@@ -25,6 +25,7 @@ export const authService = {
     async listProfesores() {
         try {
             const response = await apiInstance.get(ENDPOINTS.AUTH.LiSTPROFESORES);
+            console.log("Response data:", response.data);
             return response.data;
         } catch (error) {
             console.error('Error fetching profesores:', error);
