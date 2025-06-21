@@ -42,20 +42,15 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
       inputPlaceholder: 'Escribe aquí las observaciones...',
       showCancelButton: true,
       confirmButtonText: 'Generar boletín',
-      cancelButtonText: 'Cancelar',
-      inputValidator: (value) => {
-        if (!value) {
-          return 'Debes ingresar una observación para continuar';
-        }
-        return null;
-      }
+      cancelButtonText: 'Cancelar'
+      // Se elimina inputValidator para permitir vacío
     });
 
-    if (!obse) return;
+    if (obse === undefined) return; // Si cancela, no hace nada
 
     setLoading(true);
     try {
-      const response = await StudentService.getBoletin(student.id, obse);
+      const response = await StudentService.getBoletin(student.id, obse || '');
 
       const pdfBlob = response.data;
       const contentDisposition = response.headers['content-disposition'];

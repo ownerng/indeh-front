@@ -76,4 +76,14 @@ export const StudentService = {
             throw error;
         }
     },
+
+    async updateAllScores(studentsId: number[]) {
+        try {
+            const response = await apiInstance.put(ENDPOINTS.STUDENTS.UPDATEALLSCORES, { studentsId });
+            return response.status;
+        } catch (error) {
+            console.error('Error updating all scores:', error);
+            throw error;
+        }
+    } 
 };

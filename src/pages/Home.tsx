@@ -5,6 +5,7 @@ import type { Student } from "../types/global";
 import { useAuth } from "../context/AuthContext";
 import { UserRole } from "../enums/UserRole";
 import { Jornada } from "../enums/Jornada";
+import Swal from "sweetalert2";
 
 export default function StudentDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -49,6 +50,29 @@ export default function StudentDashboard() {
     })
     .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos));
 
+  // Nueva función para actualizar todos los scores de los estudiantes filtrados
+  const handleUpdate = async () => {
+    try {
+      const ids = filteredStudents.map(s => s.id);
+      setLoading(true);
+      await StudentService.updateAllScores(ids);
+      await fetchStudents();
+      await Swal.fire({
+        icon: "success",
+        title: "Notas actualizadas correctamente.",
+        confirmButtonText: "Aceptar"
+      });
+    } catch (error) {
+      await Swal.fire({
+        icon: "error",
+        title: "Error al actualizar las notas.",
+        confirmButtonText: "Aceptar"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
       <div className="flex justify-between items-center mb-4">
@@ -73,6 +97,14 @@ export default function StudentDashboard() {
               <option key={j} value={j}>{j.charAt(0).toUpperCase() + j.slice(1)}</option>
             ))}
           </select>
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            onClick={handleUpdate}
+            disabled={loading || filteredStudents.length === 0}
+            type="button"
+          >
+            Actualizar
+          </button>
         </div>
       </div>
 

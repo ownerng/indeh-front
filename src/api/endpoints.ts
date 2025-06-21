@@ -7,6 +7,7 @@ export const ENDPOINTS = {
         DELETEBYID:(id:number) =>  `/api/students/${id}`,
         GETBYTEACHER: '/api/students/profesor',
         BOLETIN : (id: number) => `/api/students/boletin/${id}`,
+        UPDATEALLSCORES: '/api/students/update/scores/all',
     },
     SCORES : {
         UPDATECORTE1 : (id: number) => `/api/scores/corte1/${id}`,
