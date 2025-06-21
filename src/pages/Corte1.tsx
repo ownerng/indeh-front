@@ -83,7 +83,7 @@ export default function Corte1() {
             onChange={e => setSelectedGrado(e.target.value)}
           >
             <option value="">Todos los grados</option>
-            {[6, 7, 8, 9, 10, 11].map(grado => (
+            {[1,2,3,4,5,6, 7, 8, 9, 10, 11].map(grado => (
               <option key={grado} value={String(grado)}>{grado}</option>
             ))}
           </select>
@@ -103,7 +103,7 @@ export default function Corte1() {
                     <>
                       {
                         s.students.map(student => (
-                          <StudentCardCorte key={student.id} student={student} onSaveGrade={handleSaveGrade}/>
+                          <StudentCardCorte key={student.id} student={student} corte={1} onSaveGrade={handleSaveGrade}/>
                         ))
                       }
                     </>

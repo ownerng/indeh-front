@@ -63,11 +63,13 @@ export const StudentService = {
     },
 
 
-    async getBoletin(studentId: number) {
+    async getBoletin(studentId: number, obse: string) {
         try {
-            const response = await apiInstance.get(ENDPOINTS.STUDENTS.BOLETIN(studentId), {
-                responseType: 'blob'
-            });
+            const response = await apiInstance.post(
+                ENDPOINTS.STUDENTS.BOLETIN(studentId),
+                { obse },
+                { responseType: 'blob' }
+            );
             return response;
         } catch (error) {
             console.error('Error fetching boletin:', error);

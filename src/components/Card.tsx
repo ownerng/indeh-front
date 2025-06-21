@@ -6,6 +6,8 @@ import { UserRole } from "../enums/UserRole";
 import { saveAs } from 'file-saver'; // Importa saveAs de file-saver
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import Swal from 'sweetalert2';
+
 interface StudentCardProps {
   student: Student; // Asegúrate de que UsersResponse tenga la estructura correcta para el usuario individual
   onUserAction: () => Promise<void>; // Callback para cuando una acción en UserCard requiera refrescar la lista
@@ -33,18 +35,36 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
   }
 
    const handleBoletin = async () => {
+    const { value: obse } = await Swal.fire({
+      title: 'Observaciones para el boletín',
+      input: 'textarea',
+      inputLabel: 'Trata de ser lo mas concreto posible',
+      inputPlaceholder: 'Escribe aquí las observaciones...',
+      showCancelButton: true,
+      confirmButtonText: 'Generar boletín',
+      cancelButtonText: 'Cancelar',
+      inputValidator: (value) => {
+        if (!value) {
+          return 'Debes ingresar una observación para continuar';
+        }
+        return null;
+      }
+    });
+
+    if (!obse) return;
+
     setLoading(true);
     try {
-      const response = await StudentService.getBoletin(student.id);
-      
-      const pdfBlob = response.data; 
+      const response = await StudentService.getBoletin(student.id, obse);
+
+      const pdfBlob = response.data;
       const contentDisposition = response.headers['content-disposition'];
       let filename = `boletin_${student.id}.pdf`; // Nombre por defecto
       if (contentDisposition) {
-          const filenameMatch = contentDisposition.match(/filename="(.+)"/);
-          if (filenameMatch && filenameMatch.length > 1) {
-              filename = filenameMatch[1];
-          }
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch && filenameMatch.length > 1) {
+          filename = filenameMatch[1];
+        }
       }
       saveAs(pdfBlob, filename);
 
@@ -53,7 +73,7 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
       console.error('Error al abrir el boletín:', error);
       alert('Hubo un error al generar o abrir el boletín. Inténtalo de nuevo más tarde.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
   return (

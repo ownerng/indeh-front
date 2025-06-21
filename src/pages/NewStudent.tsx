@@ -300,7 +300,7 @@ export default function NewStudentForm() {
                                 required
                             >
                                 <option value="">Seleccionar</option>
-                                {Array.from({ length: 6 }, (_, i) => 6 + i).map(grade => (
+                                {Array.from({ length: 11 }, (_, i) => i + 1).map(grade => (
                                     <option key={grade} value={String(grade)}>
                                         {grade}
                                     </option>

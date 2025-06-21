@@ -5,11 +5,12 @@ import Swal from "sweetalert2";
 
 interface StudentCardProps {
   student: StudentCorte;
+  corte: number;
   // Nueva prop: función para guardar la nota para un corte específico
   onSaveGrade?: (id: number, grade: number) => Promise<UpdateCorteResponse>;
 }
 
-export const StudentCardCorte = ({ student, onSaveGrade }: StudentCardProps) => {
+export const StudentCardCorte = ({ student, onSaveGrade,corte }: StudentCardProps) => {
   const [currentGrade, setCurrentGrade] = useState<number | string>(''); // Estado para la nota del input
   const [isSaving, setIsSaving] = useState(false); // Estado para el loader del botón guardar
 
@@ -36,7 +37,14 @@ export const StudentCardCorte = ({ student, onSaveGrade }: StudentCardProps) => 
       try {
         // Espera que la respuesta tenga la nota guardada en res.corte1
         const res = await onSaveGrade(student.id_score, gradeNumber);
-        setCurrentGrade(res.corte1); 
+        console.log(res);
+        if(corte === 1){
+          setCurrentGrade(res.corte1); 
+        } else if(corte === 2){
+          setCurrentGrade(res.corte2); 
+        } else if(corte === 3){
+          setCurrentGrade(res.corte3); 
+        }
         Swal.fire({ // Muestra SweetAlert2 de éxito
           icon: 'success',
           title: '¡Nota guardada!',
