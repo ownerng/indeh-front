@@ -38,7 +38,7 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
     const { value: obse } = await Swal.fire({
       title: 'Observaciones para el boletín',
       input: 'textarea',
-      inputLabel: 'Trata de ser lo mas concreto posible',
+      inputLabel: 'Trata de ser lo mas concreto posible, no excedas el limite del campo de texto',
       inputPlaceholder: 'Escribe aquí las observaciones...',
       showCancelButton: true,
       confirmButtonText: 'Generar boletín',

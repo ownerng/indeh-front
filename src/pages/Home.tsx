@@ -34,11 +34,20 @@ export default function StudentDashboard() {
     fetchStudents();
   }, []); 
 
-  const filteredStudents = students.filter(student =>
-    (student.nombres_apellidos.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      student.grado.toLowerCase().includes(searchTerm.toLowerCase())) &&
-    (selectedJornada ? student.jornada === selectedJornada : true)
-  );
+  const filteredStudents = students
+    .filter(student => {
+      const search = searchTerm.trim().toLowerCase();
+      const nombre = student.nombres_apellidos.toLowerCase();
+      // Permite buscar por cualquier palabra del nombre o apellido
+      return (
+        (search === "" ||
+          nombre.split(" ").some(word => word.startsWith(search)) ||
+          nombre.includes(search)
+        ) &&
+        (selectedJornada ? student.jornada === selectedJornada : true)
+      );
+    })
+    .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos));
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">

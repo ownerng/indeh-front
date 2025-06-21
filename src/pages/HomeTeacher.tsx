@@ -9,6 +9,7 @@ export default function HomeTeacher() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedJornada, setSelectedJornada] = useState<string>('');
   const [selectedGrado, setSelectedGrado] = useState<string>('');
+  const [selectedMateria, setSelectedMateria] = useState<string>('');
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState<string | null>(null); 
 
@@ -30,15 +31,29 @@ export default function HomeTeacher() {
     fetchStudents();
   }, []);
 
-  // Filtrar estudiantes según término de búsqueda, jornada y grado
+  // Obtener materias únicas
+  const materias = Array.from(new Set(students.map(s => s.nombre_asignatura)));
+
+  // Filtrar estudiantes según materia, jornada, grado y búsqueda (nombre o apellido)
   const filteredStudents = students
+    .filter(s => selectedMateria ? s.nombre_asignatura === selectedMateria : true)
     .map(s => ({
       ...s,
-      students: s.students.filter(student =>
-        (student.nombres_apellidos.toLowerCase().includes(searchTerm.toLowerCase())) &&
+      students: s.students.filter(student => {
+        const search = searchTerm.trim().toLowerCase();
+        const nombre = student.nombres_apellidos.toLowerCase();
+        // Permite buscar por cualquier palabra del nombre o apellido
+        return (
+          search === "" ||
+          nombre.split(" ").some(word => word.startsWith(search)) ||
+          nombre.includes(search)
+        );
+      })
+      .filter(student =>
         (selectedJornada ? s.jornada === selectedJornada : true) &&
         (selectedGrado ? student.grado === selectedGrado : true)
       )
+      .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos))
     }))
     .filter(s => s.students.length > 0);
 
@@ -54,6 +69,18 @@ export default function HomeTeacher() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          {materias.length > 0 && (
+            <select
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedMateria}
+              onChange={e => setSelectedMateria(e.target.value)}
+            >
+              <option value="">Todas las materias</option>
+              {materias.map(materia => (
+                <option key={materia} value={materia}>{materia}</option>
+              ))}
+            </select>
+          )}
           <select
             className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={selectedJornada}
