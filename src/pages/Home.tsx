@@ -15,6 +15,9 @@ export default function StudentDashboard() {
   const [error, setError] = useState<string | null>(null); 
   const { userRole } = useAuth();
 
+  // Agrega el estado para el grado
+  const [selectedGrado, setSelectedGrado] = useState<string>("");
+
   const fetchStudents = async () => {
     try {
       setLoading(true); 
@@ -39,13 +42,13 @@ export default function StudentDashboard() {
     .filter(student => {
       const search = searchTerm.trim().toLowerCase();
       const nombre = student.nombres_apellidos.toLowerCase();
-      // Permite buscar por cualquier palabra del nombre o apellido
       return (
         (search === "" ||
           nombre.split(" ").some(word => word.startsWith(search)) ||
           nombre.includes(search)
         ) &&
-        (selectedJornada ? student.jornada === selectedJornada : true)
+        (selectedJornada ? student.jornada === selectedJornada : true) &&
+        (selectedGrado ? student.grado === selectedGrado : true)
       );
     })
     .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos));
@@ -53,9 +56,9 @@ export default function StudentDashboard() {
   // Nueva función para actualizar todos los scores de los estudiantes filtrados
   const handleUpdate = async () => {
     try {
-      const ids = filteredStudents.map(s => s.id);
       setLoading(true);
-      await StudentService.updateAllScores(ids);
+      const res = await StudentService.updateAllScores();
+      console.log("Scores updated:", res);
       await fetchStudents();
       await Swal.fire({
         icon: "success",
@@ -95,6 +98,16 @@ export default function StudentDashboard() {
             <option value="">Todas las jornadas</option>
             {Object.values(Jornada).map(j => (
               <option key={j} value={j}>{j.charAt(0).toUpperCase() + j.slice(1)}</option>
+            ))}
+          </select>
+          <select
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={selectedGrado}
+            onChange={e => setSelectedGrado(e.target.value)}
+          >
+            <option value="">Todos los grados</option>
+            {[6, 7, 8, 9, 10, 11].map(grado => (
+              <option key={grado} value={String(grado)}>{grado}</option>
             ))}
           </select>
           <button

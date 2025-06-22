@@ -97,7 +97,7 @@ export default function HomeTeacher() {
             onChange={e => setSelectedGrado(e.target.value)}
           >
             <option value="">Todos los grados</option>
-            {[6, 7, 8, 9, 10, 11].map(grado => (
+             {[1,2,3,4,5,6,7,8,9,10,11].map(grado => (
               <option key={grado} value={String(grado)}>{grado}</option>
             ))}
           </select>
