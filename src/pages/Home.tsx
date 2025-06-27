@@ -63,7 +63,7 @@ export default function StudentDashboard() {
   const handleUpdate = async () => {
     try {
       setLoading(true);
-      const res = await StudentService.updateAllScores();
+      await StudentService.updateAllScores();
       await fetchStudents();
       await Swal.fire({
         icon: "success",
