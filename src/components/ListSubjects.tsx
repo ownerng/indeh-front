@@ -12,17 +12,29 @@ interface ListSubjectsProps {
 
 export const ListSubjects = ({ subjects, loading, error, fetchSubjects }: ListSubjectsProps) => {
   const [selectedJornada, setSelectedJornada] = useState<string>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // Filtrar las asignaturas según la jornada seleccionada
-  const filteredSubjects = selectedJornada
-    ? subjects.filter(sub => sub.jornada === selectedJornada)
-    : subjects;
+  // Filtrar las asignaturas según la jornada seleccionada y el nombre
+  const filteredSubjects = subjects.filter(sub => {
+    const matchesJornada = selectedJornada ? sub.jornada === selectedJornada : true;
+    const matchesNombre = searchTerm.trim() === ""
+      ? true
+      : sub.nombre.toLowerCase().includes(searchTerm.trim().toLowerCase());
+    return matchesJornada && matchesNombre;
+  });
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Listado de Asignaturas</h2>
         <div className="flex items-center space-x-2">
+          <input
+            type="text"
+            placeholder="Buscar asignatura..."
+            className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
           <label htmlFor="jornada-select" className="text-gray-700 font-medium">Filtrar por jornada:</label>
           <select
             id="jornada-select"

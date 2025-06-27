@@ -1,6 +1,6 @@
 import { apiInstance } from "../api/axios";
 import { ENDPOINTS } from "../api/endpoints";
-import type { CreateStudentDTO, Student, StudentsByTeacherId } from "../types/global";
+import type { CreateStudentDTO, Observaciones, Student, StudentsByTeacherId } from "../types/global";
 
 export const StudentService = {
     async createStudent(data: CreateStudentDTO) {
@@ -43,6 +43,15 @@ export const StudentService = {
             throw error;
         }
     },
+    async getStudentByGrade(id: string) {
+        try {
+            const response = await apiInstance.get(ENDPOINTS.STUDENTS.GETBYGRADE(id));
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching STUDENTS:', error);
+            throw error;
+        }
+    },
     async updateStudentById(id: number, data: CreateStudentDTO) {
         try {
             const response = await apiInstance.put(ENDPOINTS.STUDENTS.UPDATEBYID(id), data);
@@ -68,6 +77,18 @@ export const StudentService = {
             const response = await apiInstance.post(
                 ENDPOINTS.STUDENTS.BOLETIN(studentId),
                 { obse },
+                { responseType: 'blob' }
+            );
+            return response;
+        } catch (error) {
+            console.error('Error fetching boletin:', error);
+            throw error;
+        }
+    },  async getBoletinGrade(grado: string, obse: Observaciones[]) {
+        try {
+            const response = await apiInstance.post(
+                ENDPOINTS.STUDENTS.BOLETINGRADE,
+                { grado, obse },
                 { responseType: 'blob' }
             );
             return response;

@@ -257,3 +257,11 @@ export interface AssignmentData {
   id_student: number;
   id_subject: number;
 }
+
+
+export interface Observaciones {
+    id_student: number;
+    nombres_apellidos: string;
+    obse: string;
+
+}

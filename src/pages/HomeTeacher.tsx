@@ -117,7 +117,7 @@ export default function HomeTeacher() {
                     <>
                       {
                         s.students.map(student => (
-                          <TeacherStudentCard key={student.id} student={student} />
+                          <TeacherStudentCard key={student.id} student={student} nombre_asignatura={s.nombre_asignatura}/>
                         ))
                       }
                     </>

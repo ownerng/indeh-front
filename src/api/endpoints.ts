@@ -3,10 +3,12 @@ export const ENDPOINTS = {
         CREATE : '/api/students/',
         GETALL : '/api/students/',
         GETBYID:(id:number) =>  `/api/students/${id}`,
+        GETBYGRADE:(id:string) =>  `/api/students/grado/${id}`,
         UPDATEBYID:(id:number) =>  `/api/students/${id}`,
         DELETEBYID:(id:number) =>  `/api/students/${id}`,
         GETBYTEACHER: '/api/students/profesor',
         BOLETIN : (id: number) => `/api/students/boletin/${id}`,
+        BOLETINGRADE : `/api/students/boletin`,
         UPDATEALLSCORES: '/api/students/update/scores/all',
     },
     SCORES : {
@@ -16,6 +18,7 @@ export const ENDPOINTS = {
         CREATE: '/api/scores/',
         LISTALL: '/api/scores/',
         GETBYID:(id:number) =>  `/api/scores/${id}`,
+        GETBYSTUDENTID:(id:number) =>  `/api/scores/student/${id}`,
         UPDATEBYID:(id:number) =>  `/api/scores/${id}`,
         DELETEBYID:(id:number) =>  `/api/scores/${id}`
     },

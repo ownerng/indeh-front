@@ -37,7 +37,7 @@ export default function Sidebar({ userRole}: SidebarProps) {
             path: "/admin/new-user"
           },
           {
-            label: "Crear Asignatura",
+            label: "Asignaturas",
             icon: "📚",
             path: "/admin/new-subject"
           },

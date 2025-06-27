@@ -59,6 +59,15 @@ export const ScoresService = {
             throw error;
         }
     },
+    async getScoreByStudentId(id: number) {
+        try {
+            const response = await apiInstance.get(ENDPOINTS.SCORES.GETBYSTUDENTID(id));
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching SCORES:', error);
+            throw error;
+        }
+    },
     async updateScoreById(id: number, data: AssignmentData) {
         try {
             const response = await apiInstance.put(ENDPOINTS.SCORES.UPDATEBYID(id), data);

@@ -1,1 +1,10 @@
 @import "tailwindcss";
+
+/* En tu archivo global de estilos o en el componente */
+.loader {
+  border-top-color: #3498db;
+  animation: spinner 1s linear infinite;
+}
+@keyframes spinner {
+  to { transform: rotate(360deg); }
+}
