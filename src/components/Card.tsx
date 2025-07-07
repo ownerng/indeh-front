@@ -17,7 +17,6 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
   const { userRole } = useAuth();
   const navigate = useNavigate();
 
-
   const updateStudent = () => {
     navigate(`/admin/home/${student.id}/update`)
   }
@@ -34,7 +33,7 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
     }
   }
 
-   const handleBoletin = async () => {
+  const handleBoletin = async () => {
     const { value: obse } = await Swal.fire({
       title: 'Observaciones para el boletín',
       input: 'textarea',
@@ -43,10 +42,9 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
       showCancelButton: true,
       confirmButtonText: 'Generar boletín',
       cancelButtonText: 'Cancelar'
-      // Se elimina inputValidator para permitir vacío
     });
 
-    if (obse === undefined) return; // Si cancela, no hace nada
+    if (obse === undefined) return;
 
     setLoading(true);
     try {
@@ -54,7 +52,7 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
 
       const pdfBlob = response.data;
       const contentDisposition = response.headers['content-disposition'];
-      let filename = `boletin_${student.id}.pdf`; // Nombre por defecto
+      let filename = `boletin_${student.id}.pdf`;
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="(.+)"/);
         if (filenameMatch && filenameMatch.length > 1) {
@@ -71,38 +69,36 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
       setLoading(false);
     }
   };
+
   return (
     <>
-    {
-        loading && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-            <div className="z-51 text-white text-2xl font-medium">
-              Cargando boletin....
-            </div>
+      {loading && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
+          <div className="z-51 text-white text-2xl font-medium">
+            Cargando boletin....
           </div>
-        )
-      }
-    
-    <div className="flex items-center justify-between bg-white p-4 rounded-lg shadow-md mb-3 hover:shadow-lg transition-shadow">
-      
-      <div className="font-medium text-gray-800 w-1/3">{student.nombres_apellidos}</div>
-      <div className="text-gray-600 w-1/3 text-center font-medium">{student.grado}</div>
-      <div className="flex space-x-2 w-1/3 justify-end">
-        {userRole === UserRole.EJECUTIVO && (
-          <><button onClick={handleBoletin} className="p-2 bg-amber-100 text-amber-600 rounded-md hover:bg-amber-200 transition-colors">
-              <FileText size={18} />
-            </button>
-          <button onClick={updateStudent} className="p-2 bg-green-100 text-green-600 rounded-md hover:bg-green-200 transition-colors">
-              <PencilIcon size={18} />
-            </button>
-          <button onClick={deleteStudent} className="p-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors">
-              <Trash size={18} />
-            </button></>
-        )
-        }
-        
+        </div>
+      )}
+
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-white p-4 rounded-lg shadow-md mb-3 hover:shadow-lg transition-shadow gap-2 sm:gap-0">
+        <div className="font-medium text-gray-800 w-full sm:w-1/3 text-left">{student.nombres_apellidos}</div>
+        <div className="text-gray-600 w-full sm:w-1/3 text-left sm:text-center font-medium">{student.grado}</div>
+        <div className="flex w-full sm:w-1/3 justify-start sm:justify-end space-x-2 mt-2 sm:mt-0">
+          {userRole === UserRole.EJECUTIVO && (
+            <>
+              <button onClick={handleBoletin} className="p-2 bg-amber-100 text-amber-600 rounded-md hover:bg-amber-200 transition-colors">
+                <FileText size={18} />
+              </button>
+              <button onClick={updateStudent} className="p-2 bg-green-100 text-green-600 rounded-md hover:bg-green-200 transition-colors">
+                <PencilIcon size={18} />
+              </button>
+              <button onClick={deleteStudent} className="p-2 bg-red-100 text-red-600 rounded-md hover:bg-red-200 transition-colors">
+                <Trash size={18} />
+              </button>
+            </>
+          )}
+        </div>
       </div>
-    </div>
-  </>
+    </>
   );
 };

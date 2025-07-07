@@ -2,6 +2,8 @@ import { useState } from "react";
 import type { SubjectResponse } from "../types/global";
 import { SubjectCard } from "./SubjectCard";
 import { Jornada } from "../enums/Jornada";
+import Swal from "sweetalert2";
+import { SubjectsService } from "../services/subjects.service";
 
 interface ListSubjectsProps {
   subjects: SubjectResponse[];
@@ -23,11 +25,45 @@ export const ListSubjects = ({ subjects, loading, error, fetchSubjects }: ListSu
     return matchesJornada && matchesNombre;
   });
 
+  const handleNewCiclo = async () => {
+    const { value: ciclo } = await Swal.fire({
+      title: 'Creacion de nuevo ciclo',
+      input: 'text',
+      inputLabel: 'Nombra el nuevo ciclo',
+      inputPlaceholder: 'Escribe aquí el nombre del ciclo...',
+      showCancelButton: true,
+      confirmButtonText: 'Crear nuevo ciclo',
+      cancelButtonText: 'Cancelar'
+    });
+
+    if (ciclo === undefined) return;
+    const res = await SubjectsService.createNuevoCiclo(ciclo);
+
+    if (res === 201 || res === 200) {
+      Swal.fire({
+        icon: "success",
+        title: "Nuevo ciclo creado exitosamente, asigne los profesores para las materias",
+        confirmButtonText: "Aceptar"
+      });
+      fetchSubjects
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Error al crear un nuevo ciclo",
+        text: 'Hubo un error al crear un nuevo ciclo, por favor contacte con soporte',
+        confirmButtonText: "Aceptar"
+      });
+    }
+
+
+  }
+
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Listado de Asignaturas</h2>
         <div className="flex items-center space-x-2">
+
           <input
             type="text"
             placeholder="Buscar asignatura..."
@@ -47,6 +83,13 @@ export const ListSubjects = ({ subjects, loading, error, fetchSubjects }: ListSu
               <option key={j} value={j}>{j.charAt(0).toUpperCase() + j.slice(1)}</option>
             ))}
           </select>
+          <button
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-full sm:w-auto"
+            type="button"
+            onClick={handleNewCiclo}
+          >
+            Nuevo ciclo
+          </button>
         </div>
       </div>
 

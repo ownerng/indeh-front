@@ -12,7 +12,15 @@ export const SubjectsService = {
             throw error;
         }
     },
-
+    async createNuevoCiclo(ciclo: string) {
+        try {
+            const response = await apiInstance.post(ENDPOINTS.SUBJECTS.CREATENUEVOCICLo, ciclo);
+            return response.status;
+        } catch (error) {
+            console.error('Error creating subject:', error);
+            throw error;
+        }
+    },
     async listSubjects() {
         try {
             const response = await apiInstance.get(ENDPOINTS.SUBJECTS.LIST);

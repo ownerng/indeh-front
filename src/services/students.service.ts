@@ -1,5 +1,6 @@
 import { apiInstance } from "../api/axios";
 import { ENDPOINTS } from "../api/endpoints";
+import type { Jornada } from "../enums/Jornada";
 import type { CreateStudentDTO, Observaciones, Student, StudentsByTeacherId } from "../types/global";
 
 export const StudentService = {
@@ -43,9 +44,12 @@ export const StudentService = {
             throw error;
         }
     },
-    async getStudentByGrade(id: string) {
+    async getStudentByGrade(grado: string, jornada: Jornada) {
         try {
-            const response = await apiInstance.get(ENDPOINTS.STUDENTS.GETBYGRADE(id));
+            const response = await apiInstance.post(
+                ENDPOINTS.STUDENTS.GETBYGRADE,
+                { grado, jornada }
+            );
             return response.data;
         } catch (error) {
             console.error('Error fetching STUDENTS:', error);

@@ -3,7 +3,7 @@ export const ENDPOINTS = {
         CREATE : '/api/students/',
         GETALL : '/api/students/',
         GETBYID:(id:number) =>  `/api/students/${id}`,
-        GETBYGRADE:(id:string) =>  `/api/students/grado/${id}`,
+        GETBYGRADE: `/api/students/grado/jornada`,
         UPDATEBYID:(id:number) =>  `/api/students/${id}`,
         DELETEBYID:(id:number) =>  `/api/students/${id}`,
         GETBYTEACHER: '/api/students/profesor',
@@ -34,6 +34,7 @@ export const ENDPOINTS = {
     },
     SUBJECTS: {
         CREATE: '/api/subjects/',
+        CREATENUEVOCICLo: '/api/subjects/nuevo/ciclo',
         LIST: '/api/subjects/',
         GETBYID:(id:number) =>  `/api/subjects/${id}`,
         UPDATEBYID:(id:number) =>  `/api/subjects/${id}`,

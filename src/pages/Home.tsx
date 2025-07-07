@@ -13,36 +13,37 @@ export default function StudentDashboard() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedJornada, setSelectedJornada] = useState<string>('');
   const [selectedGrado, setSelectedGrado] = useState<string>('');
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState<string | null>(null); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { userRole } = useAuth();
 
   // Para el modal de boletines por grado
   const [showBoletinModal, setShowBoletinModal] = useState(false);
   const [gradoBoletin, setGradoBoletin] = useState<string>('');
+  const [jornadaBoletin, setJornadaBoletin] = useState<Jornada | null>();
   const [studentsByGrade, setStudentsByGrade] = useState<Student[]>([]);
   const [observaciones, setObservaciones] = useState<Observaciones[]>([]);
   const [loadingBoletin, setLoadingBoletin] = useState(false);
 
   const fetchStudents = async () => {
     try {
-      setLoading(true); 
-      setError(null); 
-      if(userRole === UserRole.EJECUTIVO){
+      setLoading(true);
+      setError(null);
+      if (userRole === UserRole.EJECUTIVO) {
         const studentsData = await StudentService.getAllStudents();
         setStudents(studentsData);
       }
     } catch (err) {
       console.error("Failed to fetch students:", err);
-      setError("Error al cargar los estudiantes."); 
+      setError("Error al cargar los estudiantes.");
     } finally {
-      setLoading(false); 
+      setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchStudents();
-  }, []); 
+  }, []);
 
   const filteredStudents = students
     .filter(student => {
@@ -87,6 +88,7 @@ export default function StudentDashboard() {
   const handleOpenBoletinModal = () => {
     setShowBoletinModal(true);
     setGradoBoletin('');
+    setJornadaBoletin(null);
     setStudentsByGrade([]);
     setObservaciones([]);
   };
@@ -94,17 +96,26 @@ export default function StudentDashboard() {
   const handleCloseBoletinModal = () => {
     setShowBoletinModal(false);
     setGradoBoletin('');
+    setJornadaBoletin(null);
     setStudentsByGrade([]);
     setObservaciones([]);
   };
 
-  const handleSelectGrado = async (grado: string) => {
-    setGradoBoletin(grado);
+  // Cambia handleSelectGrado para solo cargar estudiantes
+  const handleSelectGrado = async (grado: string, jornada: Jornada) => {
     setLoadingBoletin(true);
     try {
-      const studentsGrade = await StudentService.getStudentByGrade(grado);
+      const studentsGrade = await StudentService.getStudentByGrade(grado, jornada);
+
       setStudentsByGrade(studentsGrade);
-      // Inicializa observaciones para cada estudiante
+      if (studentsGrade.length === 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "No hay estudiantes",
+          text: "No se encontraron estudiantes para el grado y jornada seleccionados.",
+          confirmButtonText: "Aceptar"
+        });
+      }
       setObservaciones(
         studentsGrade.map((student: Student) => ({
           id_student: student.id,
@@ -140,9 +151,9 @@ export default function StudentDashboard() {
         obse: obs.obse || ''
       }));
       const response = await StudentService.getBoletinGrade(gradoBoletin, obsToSend);
-      const zipBlob = response.data;
+      const pdfBlob = response.data;
       // Intenta obtener el nombre del archivo del header
-      let filename = `boletines_grado_${gradoBoletin}.zip`;
+      let filename = `boletines_grado_${gradoBoletin}.pdf`;
       const contentDisposition = response.headers['content-disposition'];
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
@@ -150,7 +161,7 @@ export default function StudentDashboard() {
           filename = filenameMatch[1];
         }
       }
-      saveAs(zipBlob, filename);
+      saveAs(pdfBlob, filename);
       Swal.fire({
         icon: "success",
         title: "Boletines descargados correctamente.",
@@ -170,21 +181,23 @@ export default function StudentDashboard() {
   };
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Listado de Estudiantes</h2>
-        <div className="flex space-x-2">
-          <div className="relative">
+    <div className="bg-white p-2 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 text-center sm:text-left">
+          Listado de Estudiantes
+        </h2>
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-2 w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto">
             <input
               type="text"
               placeholder="Buscar estudiante..."
-              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           <select
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
             value={selectedJornada}
             onChange={e => setSelectedJornada(e.target.value)}
           >
@@ -194,17 +207,17 @@ export default function StudentDashboard() {
             ))}
           </select>
           <select
-            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
             value={selectedGrado}
             onChange={e => setSelectedGrado(e.target.value)}
           >
             <option value="">Todos los grados</option>
-            {[6, 7, 8, 9, 10, 11].map(grado => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(grado => (
               <option key={grado} value={String(grado)}>{grado}</option>
             ))}
           </select>
           <button
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-full sm:w-auto"
             onClick={handleUpdate}
             disabled={loading || filteredStudents.length === 0}
             type="button"
@@ -212,7 +225,7 @@ export default function StudentDashboard() {
             Actualizar
           </button>
           <button
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors w-full sm:w-auto"
             onClick={handleOpenBoletinModal}
             type="button"
           >
@@ -224,7 +237,7 @@ export default function StudentDashboard() {
       {/* Modal para Boletines por grado */}
       {showBoletinModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl max-h-[90vh] overflow-y-auto flex flex-col items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col items-center justify-center transition-all">
             {loadingBoletin ? (
               <div className="flex flex-col items-center justify-center py-12">
                 <span className="text-lg font-semibold text-gray-700 mb-4">Generando los boletines...</span>
@@ -242,23 +255,63 @@ export default function StudentDashboard() {
                     ×
                   </button>
                 </div>
-                <div className="mb-4 w-full">
-                  <label className="block mb-2 font-medium">Selecciona el grado:</label>
-                  <select
-                    className="px-4 py-2 border rounded-md w-full"
-                    value={gradoBoletin}
-                    onChange={e => handleSelectGrado(e.target.value)}
-                  >
-                    <option value="">Selecciona un grado</option>
-                    {[1,2,3,4,5,6,7,8,9,10,11].map(grado => (
-                      <option key={grado} value={String(grado)}>{grado}</option>
-                    ))}
-                  </select>
+                <div className="mb-4 w-full flex flex-col sm:flex-row gap-2">
+                  <div className="flex-1">
+                    <label className="block mb-1 font-medium">Seleccionar grado:</label>
+                    <select
+                      className="px-4 py-2 border rounded-md w-full"
+                      value={gradoBoletin}
+                      onChange={e => {
+                        setGradoBoletin(e.target.value);
+                        setStudentsByGrade([]);
+                        setObservaciones([]);
+                      }}
+                    >
+                      <option value="">Seleccionar grado</option>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(grado => (
+                        <option key={grado} value={String(grado)}>{grado}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex-1">
+                    <label className="block mb-1 font-medium">Seleccionar jornada:</label>
+                    <select
+                      className="px-4 py-2 border rounded-md w-full"
+                      value={jornadaBoletin ?? ""}
+                      onChange={e => {
+                        setJornadaBoletin(e.target.value as Jornada);
+                        setStudentsByGrade([]);
+                        setObservaciones([]);
+                      }}
+                    >
+                      <option value="">Seleccionar jornada</option>
+                      {Object.values(Jornada).map(j => (
+                        <option key={j} value={j}>{j.charAt(0).toUpperCase() + j.slice(1)}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                      onClick={async () => {
+                        if (gradoBoletin && jornadaBoletin) {
+                          await handleSelectGrado(gradoBoletin, jornadaBoletin);
+
+                        }
+                      }}
+                      disabled={!gradoBoletin || !jornadaBoletin}
+                      type="button"
+                    >
+                      Mostrar estudiantes
+                    </button>
+                  </div>
                 </div>
-                {gradoBoletin && (
+                {studentsByGrade.length > 0 && (
                   <div className="w-full">
-                    <h4 className="font-semibold mb-2">Estudiantes del grado {gradoBoletin}</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <h4 className="font-semibold mb-2">
+                      Estudiantes del grado {gradoBoletin} - Jornada {jornadaBoletin && jornadaBoletin.charAt(0).toUpperCase() + jornadaBoletin.slice(1)}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {studentsByGrade.map(student => (
                         <div key={student.id} className="border rounded-md p-3 flex flex-col">
                           <span className="font-medium mb-2">{student.nombres_apellidos}</span>
@@ -283,7 +336,7 @@ export default function StudentDashboard() {
                         disabled={loadingBoletin || studentsByGrade.length === 0}
                         type="button"
                       >
-                        Descargar boletines (.zip)
+                        Descargar boletines
                       </button>
                     </div>
                   </div>
@@ -299,9 +352,11 @@ export default function StudentDashboard() {
         {error && <div className="text-center py-8 text-red-500">Error: {error}</div>}
         {!loading && !error && (
           filteredStudents.length > 0 ? (
-            filteredStudents.map(student => (
-              <StudentCard key={student.id} student={student} onUserAction={fetchStudents}/>
-            ))
+            <div className="flex flex-col gap-4">
+              {filteredStudents.map(student => (
+                <StudentCard key={student.id} student={student} onUserAction={fetchStudents} />
+              ))}
+            </div>
           ) : (
             <div className="text-center py-8 text-gray-500">
               No se encontraron estudiantes
