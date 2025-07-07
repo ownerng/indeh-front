@@ -60,8 +60,6 @@ export const StudentCard = ({ student, onUserAction }: StudentCardProps) => {
         }
       }
       saveAs(pdfBlob, filename);
-
-      console.log(`Boletín '${filename}' descargado exitosamente.`);
     } catch (error) {
       console.error('Error al abrir el boletín:', error);
       alert('Hubo un error al generar o abrir el boletín. Inténtalo de nuevo más tarde.');

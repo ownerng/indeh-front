@@ -25,7 +25,6 @@ export function UpdateAssingSubject() {
       try {
         setLoadingStudents(true);
         const data: ScoreResponse = await ScoresService.getScoreById(Number(id));
-        console.log(data);
         setSelectedStudentId(data.id_student.id);
         setSelectedSubjectId(data.id_subject.id);
       } catch (err) {

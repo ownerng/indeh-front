@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { StudentService } from "../api";
-import type { BodyCorte1, StudentsByTeacherId } from "../types/global";
+import type { BodyCorte1, CicloResponse, StudentsByTeacherId } from "../types/global";
 import { StudentCardCorte } from "../components/StudentCardCorte";
 import { ScoresService } from "../services/scores.service";
 import { Jornada } from "../enums/Jornada";
+import { SubjectsService } from "../services/subjects.service";
 
 export default function Corte1() {
   const [students, setStudents] = useState<StudentsByTeacherId[]>([]);
@@ -14,6 +15,17 @@ export default function Corte1() {
   const [loading, setLoading] = useState(true); 
   const [error, setError] = useState<string | null>(null); 
 
+  const [ciclos, setCiclos] = useState<CicloResponse[]>([]);
+  const [selectedCiclo, setSelectedCiclo] = useState<string>("");
+
+    const fetchCiclos = async () => {
+      try {
+        const subjectsData = await SubjectsService.listCiclos();
+        setCiclos(subjectsData);
+      } catch (err) {
+        console.error("Failed to fetch subjects:", err);
+      } 
+    };
   useEffect(() => {
     const fetchStudents = async () => {
       try {
@@ -29,6 +41,7 @@ export default function Corte1() {
       }
     };
 
+    fetchCiclos();
     fetchStudents();
   }, []);
 
@@ -53,7 +66,8 @@ export default function Corte1() {
         })
         .filter(student =>
           (selectedJornada ? s.jornada === selectedJornada : true) &&
-          (selectedGrado ? student.grado === selectedGrado : true)
+          (selectedGrado ? student.grado === selectedGrado : true)&&
+          (selectedCiclo ? s.ciclo === selectedCiclo : true)
         )
         .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos))
     }))
@@ -73,9 +87,9 @@ export default function Corte1() {
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col justify-between items-start mb-4">
         <h2 className="text-xl font-semibold text-gray-800">Ingrese las notas del Primer Corte</h2>
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 mt-2">
           <input
             type="text"
             placeholder="Buscar estudiante..."
@@ -92,6 +106,19 @@ export default function Corte1() {
               <option value="">Todas las materias</option>
               {materias.map(materia => (
                 <option key={materia} value={materia}>{materia}</option>
+              ))}
+            </select>
+          )}
+          
+          {ciclos.length > 0 && (
+            <select
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedCiclo}
+              onChange={e => setSelectedCiclo(e.target.value)}
+            >
+              <option value="">Todos los ciclos</option>
+              {ciclos.map(materia => (
+                <option key={materia.id} value={materia.nombre_ciclo}>{materia.nombre_ciclo}</option>
               ))}
             </select>
           )}
@@ -125,7 +152,7 @@ export default function Corte1() {
         {!loading && !error && (
           filteredStudents.length > 0 ? (
             filteredStudents.map(s => (
-              <div className="m-5" key={s.nombre_asignatura + s.jornada}>
+              <div className="m-5" key={s.nombre_asignatura + s.jornada + (s.ciclo ?? 'sin ciclo')+Math.random()}>
                 <h2 className="text-lg font-semibold text-gray-600 my-5">{s.nombre_asignatura} - {s.jornada.toUpperCase()}</h2>
                 {
                   s.students.length > 0 ? (

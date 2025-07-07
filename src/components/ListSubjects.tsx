@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { SubjectResponse } from "../types/global";
+import type { CicloResponse, SubjectResponse } from "../types/global";
 import { SubjectCard } from "./SubjectCard";
 import { Jornada } from "../enums/Jornada";
 import Swal from "sweetalert2";
@@ -7,22 +7,26 @@ import { SubjectsService } from "../services/subjects.service";
 
 interface ListSubjectsProps {
   subjects: SubjectResponse[];
+  ciclo: CicloResponse[];
   loading: boolean;
   error: string | null;
   fetchSubjects: () => Promise<void>;
+  fetchCiclo: () => Promise<void>;
 }
 
-export const ListSubjects = ({ subjects, loading, error, fetchSubjects }: ListSubjectsProps) => {
+export const ListSubjects = ({ subjects, ciclo, loading, error, fetchSubjects, fetchCiclo }: ListSubjectsProps) => {
   const [selectedJornada, setSelectedJornada] = useState<string>("");
+  const [selectedCiclo, setSelectedCiclo] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
   // Filtrar las asignaturas según la jornada seleccionada y el nombre
   const filteredSubjects = subjects.filter(sub => {
     const matchesJornada = selectedJornada ? sub.jornada === selectedJornada : true;
+    const matchesCiclo = selectedCiclo ? sub.ciclo === selectedCiclo : true;
     const matchesNombre = searchTerm.trim() === ""
       ? true
       : sub.nombre.toLowerCase().includes(searchTerm.trim().toLowerCase());
-    return matchesJornada && matchesNombre;
+    return matchesJornada && matchesNombre && matchesCiclo;
   });
 
   const handleNewCiclo = async () => {
@@ -45,7 +49,8 @@ export const ListSubjects = ({ subjects, loading, error, fetchSubjects }: ListSu
         title: "Nuevo ciclo creado exitosamente, asigne los profesores para las materias",
         confirmButtonText: "Aceptar"
       });
-      fetchSubjects
+      fetchSubjects();
+      fetchCiclo();
     } else {
       Swal.fire({
         icon: "error",
@@ -60,10 +65,9 @@ export const ListSubjects = ({ subjects, loading, error, fetchSubjects }: ListSu
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Listado de Asignaturas</h2>
-        <div className="flex items-center space-x-2">
-
+      <div className="flex flex-col justify-between items-start mb-4">
+        <h2 className="text-3xl font-semibold text-gray-800">Listado de Asignaturas</h2>
+        <div className="flex items-center space-x-2 mt-5">
           <input
             type="text"
             placeholder="Buscar asignatura..."
@@ -81,6 +85,18 @@ export const ListSubjects = ({ subjects, loading, error, fetchSubjects }: ListSu
             <option value="">Todas</option>
             {Object.values(Jornada).map(j => (
               <option key={j} value={j}>{j.charAt(0).toUpperCase() + j.slice(1)}</option>
+            ))}
+          </select>
+          <label htmlFor="jornada-select" className="text-gray-700 font-medium">Filtrar por ciclo:</label>
+          <select
+            id="ciclo-select"
+            className="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-200"
+            value={selectedCiclo}
+            onChange={e => setSelectedCiclo(e.target.value)}
+          >
+            <option value="">--</option>
+            {ciclo.map(j => (
+              <option key={j.id} value={j.nombre_ciclo}>{j.nombre_ciclo}</option>
             ))}
           </select>
           <button

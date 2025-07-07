@@ -36,6 +36,7 @@ export const ENDPOINTS = {
         CREATE: '/api/subjects/',
         CREATENUEVOCICLo: '/api/subjects/nuevo/ciclo',
         LIST: '/api/subjects/',
+        LISTCICLOS: '/api/subjects/ciclos',
         GETBYID:(id:number) =>  `/api/subjects/${id}`,
         UPDATEBYID:(id:number) =>  `/api/subjects/${id}`,
         DELETEBYID:(id:number) =>  `/api/subjects/${id}`

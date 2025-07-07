@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { authService } from '../services/auth.service';
-import type { CreateUserResponse, UsersResponse } from '../types/global';
+import type {  UsersResponse } from '../types/global';
 import { UserRole } from '../enums/UserRole';
 import Swal from 'sweetalert2';
 import { ListUsers } from '../components/ListUsers';
@@ -65,8 +65,6 @@ export default function CreateUser() {
         role
       });
 
-      const data: CreateUserResponse = response.data;
-      console.log("Create user response:", data);
       if (response.status === 200 || response.status === 201) {
         // Show success alert
         await Swal.fire({

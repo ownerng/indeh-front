@@ -14,7 +14,7 @@ export const SubjectsService = {
     },
     async createNuevoCiclo(ciclo: string) {
         try {
-            const response = await apiInstance.post(ENDPOINTS.SUBJECTS.CREATENUEVOCICLo, ciclo);
+            const response = await apiInstance.post(ENDPOINTS.SUBJECTS.CREATENUEVOCICLo, {ciclo});
             return response.status;
         } catch (error) {
             console.error('Error creating subject:', error);
@@ -24,6 +24,16 @@ export const SubjectsService = {
     async listSubjects() {
         try {
             const response = await apiInstance.get(ENDPOINTS.SUBJECTS.LIST);
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching subjects:', error);
+            throw error;
+        }
+    },
+    
+    async listCiclos() {
+        try {
+            const response = await apiInstance.get(ENDPOINTS.SUBJECTS.LISTCICLOS);
             return response.data;
         } catch (error) {
             console.error('Error fetching subjects:', error);

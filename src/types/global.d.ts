@@ -181,7 +181,8 @@ export interface StudentCorte {
 export interface StudentsByTeacherId {
   nombre_asignatura: string;
   jornada: Jornada;
-  students: StudentCorte[]
+  ciclo:string | null;
+  students: StudentCorte[];
 }
 export interface BodyCorte1 {
     corte1: number;
@@ -235,12 +236,16 @@ export interface Subject {
   nombre: string;
   id_profesor: number;
 }
-
+export interface CicloResponse {
+  id: number;
+  nombre_ciclo: string;
+}
 export interface SubjectResponse {
   id: number;
   nombre: string;
   jornada: Jornada;
   fecha_creacion: Date;
+  ciclo: string | null;
   profesor:Professor | null;
 }
 export interface ScoreResponse {

@@ -1,17 +1,30 @@
 import { useEffect, useState } from "react";
 import { StudentService } from "../api";
-import type { StudentsByTeacherId } from "../types/global";
+import type { CicloResponse, StudentsByTeacherId } from "../types/global";
 import { TeacherStudentCard } from "../components/TeacherStudentCard";
 import { Jornada } from "../enums/Jornada";
+import { SubjectsService } from "../services/subjects.service";
 
 export default function HomeTeacher() {
   const [students, setStudents] = useState<StudentsByTeacherId[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedJornada, setSelectedJornada] = useState<string>('');
   const [selectedGrado, setSelectedGrado] = useState<string>('');
+  const [ciclos, setCiclos] = useState<CicloResponse[]>([]);
+  const [selectedCiclo, setSelectedCiclo] = useState<string>("");
   const [selectedMateria, setSelectedMateria] = useState<string>('');
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState<string | null>(null); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchCiclos = async () => {
+    try {
+      const subjectsData = await SubjectsService.listCiclos();
+      setCiclos(subjectsData);
+    } catch (err) {
+      console.error("Failed to fetch subjects:", err);
+    } 
+  };
+
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -27,7 +40,7 @@ export default function HomeTeacher() {
         setLoading(false);
       }
     };
-
+    fetchCiclos();
     fetchStudents();
   }, []);
 
@@ -49,19 +62,20 @@ export default function HomeTeacher() {
           nombre.includes(search)
         );
       })
-      .filter(student =>
-        (selectedJornada ? s.jornada === selectedJornada : true) &&
-        (selectedGrado ? student.grado === selectedGrado : true)
-      )
-      .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos))
+        .filter(student =>
+          (selectedJornada ? s.jornada === selectedJornada : true) &&
+          (selectedGrado ? student.grado === selectedGrado : true) &&
+          (selectedCiclo ? s.ciclo === selectedCiclo : true)
+        )
+        .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos))
     }))
     .filter(s => s.students.length > 0);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Listado de Estudiantes</h2>
-        <div className="flex space-x-2">
+      <div className="flex flex-col justify-between items-start mb-4">
+        <h2 className="text-3xl font-semibold text-gray-800">Listado de Estudiantes</h2>
+        <div className="flex space-x-2 mt-2">
           <input
             type="text"
             placeholder="Buscar estudiante..."
@@ -81,6 +95,18 @@ export default function HomeTeacher() {
               ))}
             </select>
           )}
+          {ciclos.length > 0 && (
+            <select
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              value={selectedCiclo}
+              onChange={e => setSelectedCiclo(e.target.value)}
+            >
+              <option value="">Todos los ciclos</option>
+              {ciclos.map(materia => (
+                <option key={materia.id} value={materia.nombre_ciclo}>{materia.nombre_ciclo}</option>
+              ))}
+            </select>
+          )}
           <select
             className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             value={selectedJornada}
@@ -97,7 +123,7 @@ export default function HomeTeacher() {
             onChange={e => setSelectedGrado(e.target.value)}
           >
             <option value="">Todos los grados</option>
-             {[1,2,3,4,5,6,7,8,9,10,11].map(grado => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(grado => (
               <option key={grado} value={String(grado)}>{grado}</option>
             ))}
           </select>
@@ -110,14 +136,14 @@ export default function HomeTeacher() {
         {!loading && !error && (
           filteredStudents.length > 0 ? (
             filteredStudents.map(s => (
-              <div className="m-5" key={s.nombre_asignatura + s.jornada}>
+              <div className="m-5" key={s.nombre_asignatura + s.jornada + (s.ciclo ?? 'sin ciclo')+Math.random()}>
                 <h2 className="text-lg font-semibold text-gray-600 my-5">{s.nombre_asignatura} - {s.jornada.toUpperCase()}</h2>
                 {
                   s.students.length > 0 ? (
                     <>
                       {
                         s.students.map(student => (
-                          <TeacherStudentCard key={student.id} student={student} nombre_asignatura={s.nombre_asignatura}/>
+                          <TeacherStudentCard key={student.id} student={student} nombre_asignatura={s.nombre_asignatura} />
                         ))
                       }
                     </>

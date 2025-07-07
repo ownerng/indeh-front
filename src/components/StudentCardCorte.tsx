@@ -37,7 +37,6 @@ export const StudentCardCorte = ({ student, onSaveGrade,corte }: StudentCardProp
       try {
         // Espera que la respuesta tenga la nota guardada en res.corte1
         const res = await onSaveGrade(student.id_score, gradeNumber);
-        console.log(res);
         if(corte === 1){
           setCurrentGrade(res.corte1); 
         } else if(corte === 2){
