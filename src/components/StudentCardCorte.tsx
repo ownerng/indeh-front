@@ -1,102 +1,107 @@
-import { useState } from "react"; // Importa useState para el input
+import React, { useState, useImperativeHandle, forwardRef } from 'react';
 import type { StudentCorte, UpdateCorteResponse } from "../types/global";
-import { Save } from 'lucide-react';
 import Swal from "sweetalert2";
 
 interface StudentCardProps {
   student: StudentCorte;
   corte: number;
-  // Nueva prop: función para guardar la nota para un corte específico
   onSaveGrade?: (id: number, grade: number) => Promise<UpdateCorteResponse>;
 }
 
-export const StudentCardCorte = ({ student, onSaveGrade,corte }: StudentCardProps) => {
-  const [currentGrade, setCurrentGrade] = useState<number | string>(''); // Estado para la nota del input
-  const [isSaving, setIsSaving] = useState(false); // Estado para el loader del botón guardar
+const StudentCardCorte = forwardRef<any, StudentCardProps>(
+  ({ student, corte, onSaveGrade }, ref) => {
+    // Initialize grade state with the current corte's score, or an empty string
+    const initialGrade = student[`corte${corte}` as keyof StudentCorte] ?? '';
+    const [grade, setGrade] = useState<number | string>(initialGrade);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
 
+    // Expose functions to the parent component via ref
+    useImperativeHandle(ref, () => ({
+      getCurrentGrade: () => {
+        // Return the parsed grade, or null if it's not a valid number
+        const parsedGrade = parseFloat(String(grade));
+        return isNaN(parsedGrade) ? null : parsedGrade;
+      }
+    }));
 
- 
-  const handleGradeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    // Permite cadena vacía para que el usuario pueda borrar el input
-    if (value === '') {
-      setCurrentGrade('');
-      return;
-    }
-    const numValue = parseFloat(value);
-    // Valida que sea un número y esté entre 1 y 5 (incluyendo decimales)
-    if (!isNaN(numValue) && numValue >= 1 && numValue <= 5) {
-      setCurrentGrade(value); // Guarda el string para permitir edición como texto
-    }
-  };
+    const handleGradeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.value;
+      // Allow empty string for initial input, and numbers (including decimals)
+      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        setGrade(value);
+      }
+    };
 
-  const handleSave = async () => {
-    const gradeNumber = typeof currentGrade === 'string' ? parseFloat(currentGrade) : currentGrade;
-    if (onSaveGrade && !isNaN(gradeNumber) && gradeNumber >= 1 && gradeNumber <= 5) {
+    const handleSave = async () => {
+      const parsedGrade = parseFloat(String(grade));
+
+      if (isNaN(parsedGrade) || parsedGrade < 0 || parsedGrade > 10) { // Example validation
+        setSaveError('La nota debe ser un número entre 0 y 10.');
+        return;
+      }
+
       setIsSaving(true);
+      setSaveError(null);
       try {
-        // Espera que la respuesta tenga la nota guardada en res.corte1
-        const res = await onSaveGrade(student.id_score, gradeNumber);
-        if(corte === 1){
-          setCurrentGrade(res.corte1); 
-        } else if(corte === 2){
-          setCurrentGrade(res.corte2); 
-        } else if(corte === 3){
-          setCurrentGrade(res.corte3); 
-        }
-        Swal.fire({ // Muestra SweetAlert2 de éxito
+        await onSaveGrade!(student.id, parsedGrade);
+        // You might want to update the local state of the student if the save is successful
+        // For example, if you have a `setStudents` in the parent and pass it down,
+        // or re-fetch students after saving all.
+        Swal.fire({
           icon: 'success',
-          title: '¡Nota guardada!',
-          text: 'La nota se ha guardado correctamente.',
+          title: 'Nota guardada',
+          showConfirmButton: false,
+          timer: 800
         });
-      } catch (error) {
-        console.error("Error al guardar la nota:", error);
-                Swal.fire({ // Muestra SweetAlert2 de error
+      } catch (err) {
+        console.error(`Error saving grade for ${student.nombres_apellidos}:`, err);
+        setSaveError('Error al guardar la nota.');
+        Swal.fire({
           icon: 'error',
-          title: 'Error al guardar',
-          text: 'Hubo un problema al intentar guardar la nota.',
+          title: 'Error',
+          text: 'No se pudo guardar la nota.',
+          confirmButtonText: 'Ok'
         });
       } finally {
         setIsSaving(false);
       }
-    } else {
-      Swal.fire({ // Muestra SweetAlert2 de validación
-        icon: 'warning',
-        title: 'Entrada inválida',
-        text: 'La nota debe ser un número entre 1 y 5.',
-      });
-    }
-  };
+    };
 
-  return (
-    <div className="flex flex-col sm:flex-row items-center justify-between bg-white p-4 rounded-lg shadow-md mb-3 hover:shadow-lg transition-shadow">
-      <div className="font-medium text-gray-800 w-full sm:w-1/3 mb-2 sm:mb-0">{student.nombres_apellidos}</div>
-      <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-1/3 justify-end items-center">
-
-        {onSaveGrade && (
-          <div className="flex items-center space-x-2 w-full sm:w-auto">
-            <input
-              type="number"
-              min="1"
-              max="5"
-              step="0.1" // Permite decimales si es necesario, si no, quita esta línea
-              value={currentGrade}
-              onChange={handleGradeChange}
-              placeholder="Nota (1-5)"
-              className="w-28 px-3 py-2 border rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <button
-              onClick={handleSave}
-              disabled={isSaving}
-              className={`p-2 rounded-md transition-colors w-full sm:w-auto
-                ${isSaving ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-500 text-white hover:bg-blue-600'}
-              `}
-            >
-              {isSaving ? 'Guardando...' : <Save size={18} />}
-            </button>
-          </div>
-        )}
+    return (
+      <div className="bg-gray-50 p-4 mb-3 rounded-lg shadow-sm border border-gray-200 flex flex-col sm:flex-row justify-between items-center">
+        <div className="flex-1 mb-2 sm:mb-0 text-gray-700">
+          <p className="font-medium text-lg">{student.nombres_apellidos}</p>
+          <p className="text-sm">Grado: {student.grado}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min="0"
+            max="10"
+            step="0.1"
+            value={grade}
+            onChange={handleGradeChange}
+            className="w-24 px-3 py-2 border rounded-md text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Nota"
+            aria-label={`Nota para ${student.nombres_apellidos} en Corte ${corte}`}
+          />
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? (
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+            ) : (
+              'Guardar'
+            )}
+          </button>
+        </div>
+        {saveError && <p className="text-red-500 text-sm mt-1 sm:mt-0">{saveError}</p>}
       </div>
-    </div>
-  );
-};
+    );
+  }
+);
+
+export { StudentCardCorte }; // Export it as a named export

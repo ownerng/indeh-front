@@ -7,6 +7,7 @@ import { UserRole } from "../enums/UserRole";
 import { Jornada } from "../enums/Jornada";
 import Swal from "sweetalert2";
 import { saveAs } from "file-saver";
+import { SubjectsService } from "../services/subjects.service";
 
 export default function StudentDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
@@ -24,6 +25,10 @@ export default function StudentDashboard() {
   const [studentsByGrade, setStudentsByGrade] = useState<Student[]>([]);
   const [observaciones, setObservaciones] = useState<Observaciones[]>([]);
   const [loadingBoletin, setLoadingBoletin] = useState(false);
+  const [ciclos, setCiclos] = useState<{ id: number, nombre_ciclo: string }[]>([]);
+  const [selectedCiclo, setSelectedCiclo] = useState<string>("");
+  const [cicloBoletin, setCicloBoletin] = useState<string>("");
+  const [definitivas, setDefinitivas] = useState(false);
 
   const fetchStudents = async () => {
     try {
@@ -40,9 +45,17 @@ export default function StudentDashboard() {
       setLoading(false);
     }
   };
-
+    const fetchCiclos = async () => {
+      try {
+        const ciclosData = await SubjectsService.listCiclos();
+        setCiclos(ciclosData);
+      } catch (err) {
+        console.error("Failed to fetch ciclos:", err);
+      }
+    };
   useEffect(() => {
     fetchStudents();
+    fetchCiclos();
   }, []);
 
   const filteredStudents = students
@@ -102,17 +115,20 @@ export default function StudentDashboard() {
   };
 
   // Cambia handleSelectGrado para solo cargar estudiantes
-  const handleSelectGrado = async (grado: string, jornada: Jornada) => {
+  const handleSelectGrado = async (
+    grado: string,
+    jornada: Jornada,
+  ) => {
     setLoadingBoletin(true);
     try {
-      const studentsGrade = await StudentService.getStudentByGrade(grado, jornada);
+      const studentsGrade = await StudentService.getStudentByGrade(grado, jornada,);
 
       setStudentsByGrade(studentsGrade);
       if (studentsGrade.length === 0) {
         Swal.fire({
           icon: "warning",
           title: "No hay estudiantes",
-          text: "No se encontraron estudiantes para el grado y jornada seleccionados.",
+          text: "No se encontraron estudiantes para el grado, jornada y ciclo seleccionados.",
           confirmButtonText: "Aceptar"
         });
       }
@@ -145,12 +161,16 @@ export default function StudentDashboard() {
   const handleDownloadBoletines = async () => {
     try {
       setLoadingBoletin(true);
-      // Si no hay observaciones, inicializa con '' para todos
       const obsToSend = observaciones.map(obs => ({
         ...obs,
         obse: obs.obse || ''
       }));
-      const response = await StudentService.getBoletinGrade(gradoBoletin, obsToSend);
+      const response = await StudentService.getBoletinGrade(
+        gradoBoletin,
+        obsToSend,
+        cicloBoletin,
+        definitivas
+      );
       const pdfBlob = response.data;
       // Intenta obtener el nombre del archivo del header
       let filename = `boletines_grado_${gradoBoletin}.pdf`;
@@ -182,7 +202,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="bg-white p-2 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4">
+      <div className="flex flex-col gap-4 mb-4">
         <h2 className="text-lg sm:text-xl font-semibold text-gray-800 text-center sm:text-left">
           Listado de Estudiantes
         </h2>
@@ -216,6 +236,18 @@ export default function StudentDashboard() {
               <option key={grado} value={String(grado)}>{grado}</option>
             ))}
           </select>
+          {ciclos.length > 0 && (
+            <select
+              className="px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+              value={selectedCiclo}
+              onChange={e => setSelectedCiclo(e.target.value)}
+            >
+              <option value="">Todos los ciclos</option>
+              {ciclos.map(ciclo => (
+                <option key={ciclo.id} value={ciclo.nombre_ciclo}>{ciclo.nombre_ciclo}</option>
+              ))}
+            </select>
+          )}
           <button
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors w-full sm:w-auto"
             onClick={handleUpdate}
@@ -236,102 +268,163 @@ export default function StudentDashboard() {
 
       {/* Modal para Boletines por grado */}
       {showBoletinModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 bg-opacity-40">
-          <div className="bg-white rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-[95vw] sm:max-w-2xl md:max-w-3xl max-h-[95vh] overflow-y-auto flex flex-col items-center justify-center transition-all">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col mx-4">
             {loadingBoletin ? (
-              <div className="flex flex-col items-center justify-center py-12">
+              <div className="flex flex-col items-center justify-center py-20">
                 <span className="text-lg font-semibold text-gray-700 mb-4">Generando los boletines...</span>
-                <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
+                <div className="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12"></div>
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-center mb-4 w-full">
-                  <h3 className="text-lg font-semibold">Generar boletines por grado</h3>
+                {/* Header del modal */}
+                <div className="flex justify-between items-center p-6 border-b">
+                  <h3 className="text-xl font-semibold text-gray-800">Generar boletines por grado</h3>
                   <button
-                    className="text-gray-500 hover:text-gray-700 text-xl"
+                    className="text-gray-500 hover:text-gray-700 text-2xl font-bold p-1"
                     onClick={handleCloseBoletinModal}
                     type="button"
                   >
                     ×
                   </button>
                 </div>
-                <div className="mb-4 w-full flex flex-col sm:flex-row gap-2">
-                  <div className="flex-1">
-                    <label className="block mb-1 font-medium">Seleccionar grado:</label>
-                    <select
-                      className="px-4 py-2 border rounded-md w-full"
-                      value={gradoBoletin}
-                      onChange={e => {
-                        setGradoBoletin(e.target.value);
-                        setStudentsByGrade([]);
-                        setObservaciones([]);
-                      }}
-                    >
-                      <option value="">Seleccionar grado</option>
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(grado => (
-                        <option key={grado} value={String(grado)}>{grado}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex-1">
-                    <label className="block mb-1 font-medium">Seleccionar jornada:</label>
-                    <select
-                      className="px-4 py-2 border rounded-md w-full"
-                      value={jornadaBoletin ?? ""}
-                      onChange={e => {
-                        setJornadaBoletin(e.target.value as Jornada);
-                        setStudentsByGrade([]);
-                        setObservaciones([]);
-                      }}
-                    >
-                      <option value="">Seleccionar jornada</option>
-                      {Object.values(Jornada).map(j => (
-                        <option key={j} value={j}>{j.charAt(0).toUpperCase() + j.slice(1)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="flex items-end">
-                    <button
-                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                      onClick={async () => {
-                        if (gradoBoletin && jornadaBoletin) {
-                          await handleSelectGrado(gradoBoletin, jornadaBoletin);
 
-                        }
-                      }}
-                      disabled={!gradoBoletin || !jornadaBoletin}
-                      type="button"
-                    >
-                      Mostrar estudiantes
-                    </button>
-                  </div>
-                </div>
-                {studentsByGrade.length > 0 && (
-                  <div className="w-full">
-                    <h4 className="font-semibold mb-2">
-                      Estudiantes del grado {gradoBoletin} - Jornada {jornadaBoletin && jornadaBoletin.charAt(0).toUpperCase() + jornadaBoletin.slice(1)}
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {studentsByGrade.map(student => (
-                        <div key={student.id} className="border rounded-md p-3 flex flex-col">
-                          <span className="font-medium mb-2">{student.nombres_apellidos}</span>
-                          <input
-                            type="text"
-                            className="px-2 py-1 border rounded-md"
-                            placeholder="Observaciones (opcional)"
-                            value={
-                              observaciones.find(obs => obs.id_student === student.id)?.obse || ""
-                            }
-                            onChange={e =>
-                              handleObservacionChange(student.id, e.target.value)
-                            }
-                          />
-                        </div>
-                      ))}
+                {/* Contenido del modal */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  {/* Formulario de selección */}
+                  <div className="mb-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                      {/* Grado */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Grado:</label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={gradoBoletin}
+                          onChange={e => {
+                            setGradoBoletin(e.target.value);
+                            setStudentsByGrade([]);
+                            setObservaciones([]);
+                          }}
+                        >
+                          <option value="">Seleccionar grado</option>
+                          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(grado => (
+                            <option key={grado} value={String(grado)}>{grado}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Jornada */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Jornada:</label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={jornadaBoletin ?? ""}
+                          onChange={e => {
+                            setJornadaBoletin(e.target.value as Jornada);
+                            setStudentsByGrade([]);
+                            setObservaciones([]);
+                          }}
+                        >
+                          <option value="">Seleccionar jornada</option>
+                          {Object.values(Jornada).map(j => (
+                            <option key={j} value={j}>{j.charAt(0).toUpperCase() + j.slice(1)}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Ciclo */}
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">Ciclo:</label>
+                        <select
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={cicloBoletin}
+                          onChange={e => setCicloBoletin(e.target.value)}
+                        >
+                          <option value="">Seleccionar ciclo</option>
+                          {ciclos.map(ciclo => (
+                            <option key={ciclo.id} value={ciclo.nombre_ciclo}>{ciclo.nombre_ciclo}</option>
+                          ))}
+                        </select>
+                      </div>
                     </div>
-                    <div className="flex justify-end mt-6">
+
+                    {/* Checkbox y botón */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex items-center">
+                        <input
+                          id="definitivas"
+                          type="checkbox"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          checked={definitivas}
+                          onChange={e => setDefinitivas(e.target.checked)}
+                        />
+                        <label htmlFor="definitivas" className="ml-2 block text-sm text-gray-700">
+                          Notas definitivas
+                        </label>
+                      </div>
+                      
                       <button
-                        className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                        className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={async () => {
+                          if (gradoBoletin && jornadaBoletin && cicloBoletin) {
+                            await handleSelectGrado(gradoBoletin, jornadaBoletin);
+                          } else {
+                            Swal.fire({
+                              icon: "warning",
+                              title: "Faltan datos",
+                              text: "Debes seleccionar grado, jornada y ciclo.",
+                              confirmButtonText: "Aceptar"
+                            });
+                          }
+                        }}
+                        disabled={!gradoBoletin || !jornadaBoletin || !cicloBoletin}
+                        type="button"
+                      >
+                        Mostrar estudiantes
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Lista de estudiantes */}
+                  {studentsByGrade.length > 0 && (
+                    <div className="space-y-4">
+                      <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                        Estudiantes del grado {gradoBoletin} - Jornada {jornadaBoletin && jornadaBoletin.charAt(0).toUpperCase() + jornadaBoletin.slice(1)}
+                      </h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {studentsByGrade.map(student => (
+                          <div key={student.id} className="bg-gray-50 border rounded-lg p-4 space-y-3">
+                            <div className="font-medium text-gray-800">{student.nombres_apellidos}</div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Observaciones:
+                              </label>
+                              <textarea
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                rows={2}
+                                placeholder="Observaciones (opcional)"
+                                value={
+                                  observaciones.find(obs => obs.id_student === student.id)?.obse || ""
+                                }
+                                onChange={e =>
+                                  handleObservacionChange(student.id, e.target.value)
+                                }
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer del modal */}
+                {studentsByGrade.length > 0 && (
+                  <div className="border-t p-6 bg-gray-50">
+                    <div className="flex justify-end">
+                      <button
+                        className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={handleDownloadBoletines}
                         disabled={loadingBoletin || studentsByGrade.length === 0}
                         type="button"

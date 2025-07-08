@@ -88,11 +88,11 @@ export const StudentService = {
             console.error('Error fetching boletin:', error);
             throw error;
         }
-    },  async getBoletinGrade(grado: string, obse: Observaciones[]) {
+    },  async getBoletinGrade(grado: string, obse: Observaciones[], ciclo: string, is_final: boolean) {
         try {
             const response = await apiInstance.post(
                 ENDPOINTS.STUDENTS.BOLETINGRADE,
-                { grado, obse },
+                { grado, obse, ciclo, is_final },
                 { responseType: 'blob' }
             );
             return response;

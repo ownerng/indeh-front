@@ -11,7 +11,7 @@ import axios from 'axios';
 
 
 export const apiInstance = axios.create({
-  baseURL: 'http://localhost:3000',  // Ajusta según tu configuración
+  baseURL: 'http://localhost:8080',  // Ajusta según tu configuración
   timeout: 30000,  // Aumentado para archivos grandes
   headers: {
     'Content-Type': 'application/json',
