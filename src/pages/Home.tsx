@@ -30,6 +30,9 @@ export default function StudentDashboard() {
   const [cicloBoletin, setCicloBoletin] = useState<string>("");
   const [definitivas, setDefinitivas] = useState(false);
 
+  // New state for Excel loading
+  const [loadingExcel, setLoadingExcel] = useState(false);
+
   const fetchStudents = async () => {
     try {
       setLoading(true);
@@ -45,14 +48,14 @@ export default function StudentDashboard() {
       setLoading(false);
     }
   };
-    const fetchCiclos = async () => {
-      try {
-        const ciclosData = await SubjectsService.listCiclos();
-        setCiclos(ciclosData);
-      } catch (err) {
-        console.error("Failed to fetch ciclos:", err);
-      }
-    };
+  const fetchCiclos = async () => {
+    try {
+      const ciclosData = await SubjectsService.listCiclos();
+      setCiclos(ciclosData);
+    } catch (err) {
+      console.error("Failed to fetch ciclos:", err);
+    }
+  };
   useEffect(() => {
     fetchStudents();
     fetchCiclos();
@@ -102,6 +105,7 @@ export default function StudentDashboard() {
     setShowBoletinModal(true);
     setGradoBoletin('');
     setJornadaBoletin(null);
+    setCicloBoletin(""); // Reset cicloBoletin
     setStudentsByGrade([]);
     setObservaciones([]);
   };
@@ -110,6 +114,7 @@ export default function StudentDashboard() {
     setShowBoletinModal(false);
     setGradoBoletin('');
     setJornadaBoletin(null);
+    setCicloBoletin(""); // Reset cicloBoletin
     setStudentsByGrade([]);
     setObservaciones([]);
   };
@@ -121,7 +126,7 @@ export default function StudentDashboard() {
   ) => {
     setLoadingBoletin(true);
     try {
-      const studentsGrade = await StudentService.getStudentByGrade(grado, jornada,);
+      const studentsGrade = await StudentService.getStudentByGrade(grado, jornada);
 
       setStudentsByGrade(studentsGrade);
       if (studentsGrade.length === 0) {
@@ -200,6 +205,43 @@ export default function StudentDashboard() {
     }
   };
 
+  // --- Implementación de la lógica para handleExcel ---
+  const handleExcel = async () => {
+    setLoadingExcel(true); // Start loading
+    try {
+      const response = await StudentService.getExcel();
+      const excelBlob = response.data;
+
+      let filename = `estudiantes_data.xlsx`; // Default filename
+      const contentDisposition = response.headers['content-disposition'];
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      saveAs(excelBlob, filename);
+
+      Swal.fire({
+        icon: 'success',
+        title: 'Excel descargado exitosamente',
+        text: 'El archivo de datos de estudiantes se ha descargado.',
+        confirmButtonText: 'Aceptar'
+      });
+    } catch (error: any) {
+      console.error('Error al descargar el archivo Excel:', error);
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de descarga',
+        text: error?.message || 'Hubo un problema al intentar descargar el archivo Excel.',
+        confirmButtonText: 'Aceptar'
+      });
+    } finally {
+      setLoadingExcel(false); // End loading
+    }
+  };
+
   return (
     <div className="bg-white p-2 sm:p-4 md:p-6 rounded-lg shadow-md mb-6">
       <div className="flex flex-col gap-4 mb-4">
@@ -256,13 +298,27 @@ export default function StudentDashboard() {
           >
             Actualizar
           </button>
-          <button
-            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors w-full sm:w-auto"
-            onClick={handleOpenBoletinModal}
-            type="button"
-          >
-            Boletines por grado
-          </button>
+          <div className="flex gap-2 w-full sm:w-auto"> {/* Flex container for boletines and excel buttons */}
+            <button
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors flex-1"
+              onClick={handleOpenBoletinModal}
+              type="button"
+            >
+              Boletines por grado
+            </button>
+            {/* Excel Button */}
+            <button
+              className="p-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 transition-colors"
+              onClick={handleExcel}
+              type="button"
+              title="Exportar a Excel"
+              disabled={loadingExcel} // Disable button while loading
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-9.707a1 1 0 011.414 0L9 8.586V5a1 1 0 112 0v3.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -362,7 +418,7 @@ export default function StudentDashboard() {
                           Notas definitivas
                         </label>
                       </div>
-                      
+
                       <button
                         className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={async () => {
@@ -391,29 +447,32 @@ export default function StudentDashboard() {
                       <h4 className="text-lg font-semibold text-gray-800 border-b pb-2">
                         Estudiantes del grado {gradoBoletin} - Jornada {jornadaBoletin && jornadaBoletin.charAt(0).toUpperCase() + jornadaBoletin.slice(1)}
                       </h4>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {studentsByGrade.map(student => (
-                          <div key={student.id} className="bg-gray-50 border rounded-lg p-4 space-y-3">
-                            <div className="font-medium text-gray-800">{student.nombres_apellidos}</div>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Observaciones:
-                              </label>
-                              <textarea
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                                rows={2}
-                                placeholder="Observaciones (opcional)"
-                                value={
-                                  observaciones.find(obs => obs.id_student === student.id)?.obse || ""
-                                }
-                                onChange={e =>
-                                  handleObservacionChange(student.id, e.target.value)
-                                }
-                              />
+                        {observaciones.map(obs => { // Iterate over observations to ensure consistency
+                          const student = studentsByGrade.find(s => s.id === obs.id_student);
+                          if (!student) return null; // Should not happen if data is consistent
+
+                          return (
+                            <div key={student.id} className="bg-gray-50 border rounded-lg p-4 space-y-3">
+                              <div className="font-medium text-gray-800">{student.nombres_apellidos}</div>
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Observaciones:
+                                </label>
+                                <textarea
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                                  rows={2}
+                                  placeholder="Observaciones (opcional)"
+                                  value={obs.obse}
+                                  onChange={e =>
+                                    handleObservacionChange(student.id, e.target.value)
+                                  }
+                                />
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}
@@ -436,6 +495,16 @@ export default function StudentDashboard() {
                 )}
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Loading overlay for Excel download */}
+      {loadingExcel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 bg-opacity-70 text-white">
+          <div className="flex flex-col items-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white mb-4"></div>
+            <span className="text-lg font-semibold">Descargando Excel...</span>
           </div>
         </div>
       )}

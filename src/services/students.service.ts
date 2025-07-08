@@ -44,6 +44,18 @@ export const StudentService = {
             throw error;
         }
     },
+    async promoteStudent(student: Student) {
+        try {
+            const grado = student.grado;
+            const response = await apiInstance.put(ENDPOINTS.STUDENTS.PROMOTESTUDENT(student.id), {
+                grado
+            });
+            return response;
+        } catch (error) {
+            console.error('Error fetching STUDENTS:', error);
+            throw error;
+        }
+    },
     async getStudentByGrade(grado: string, jornada: Jornada) {
         try {
             const response = await apiInstance.post(
@@ -76,11 +88,19 @@ export const StudentService = {
     },
 
 
-    async getBoletin(studentId: number, obse: string) {
+    async getBoletin(student: Student, obse: string, ciclo: string, is_final: boolean) {
         try {
+            const grado = student.grado;
+            const jornada = student.jornada;
+            const obs: Observaciones = {
+                id_student: student.id,
+                nombres_apellidos: student.nombres_apellidos,
+                obse: obse
+            }
+
             const response = await apiInstance.post(
-                ENDPOINTS.STUDENTS.BOLETIN(studentId),
-                { obse },
+                ENDPOINTS.STUDENTS.BOLETIN(student.id),
+                { grado, jornada, obs, ciclo, is_final },
                 { responseType: 'blob' }
             );
             return response;
@@ -88,7 +108,21 @@ export const StudentService = {
             console.error('Error fetching boletin:', error);
             throw error;
         }
-    },  async getBoletinGrade(grado: string, obse: Observaciones[], ciclo: string, is_final: boolean) {
+    },
+    async getExcel() {
+        try {
+            const response = await apiInstance.get(
+                ENDPOINTS.STUDENTS.EXCEL,
+                { responseType: 'blob' }
+            );
+            return response;
+        } catch (error) {
+            console.error('Error fetching boletin:', error);
+            throw error;
+        }
+    }
+    
+    ,  async getBoletinGrade(grado: string, obse: Observaciones[], ciclo: string, is_final: boolean) {
         try {
             const response = await apiInstance.post(
                 ENDPOINTS.STUDENTS.BOLETINGRADE,
