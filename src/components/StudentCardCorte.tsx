@@ -36,7 +36,7 @@ const StudentCardCorte = forwardRef<any, StudentCardProps>(
     const handleSave = async () => {
       const parsedGrade = parseFloat(String(grade));
 
-      if (isNaN(parsedGrade) || parsedGrade < 0 || parsedGrade > 10) { // Example validation
+      if (isNaN(parsedGrade) || parsedGrade < 0 || parsedGrade > 10) {
         setSaveError('La nota debe ser un número entre 0 y 10.');
         return;
       }
@@ -44,10 +44,9 @@ const StudentCardCorte = forwardRef<any, StudentCardProps>(
       setIsSaving(true);
       setSaveError(null);
       try {
-        await onSaveGrade!(student.id, parsedGrade);
-        // You might want to update the local state of the student if the save is successful
-        // For example, if you have a `setStudents` in the parent and pass it down,
-        // or re-fetch students after saving all.
+        // CAMBIO PRINCIPAL: usar student.id_score en lugar de student.id
+        await onSaveGrade!(student.id_score, parsedGrade);
+        
         Swal.fire({
           icon: 'success',
           title: 'Nota guardada',
@@ -55,7 +54,6 @@ const StudentCardCorte = forwardRef<any, StudentCardProps>(
           timer: 800
         });
       } catch (err) {
-        console.error(`Error saving grade for ${student.nombres_apellidos}:`, err);
         setSaveError('Error al guardar la nota.');
         Swal.fire({
           icon: 'error',
@@ -104,4 +102,4 @@ const StudentCardCorte = forwardRef<any, StudentCardProps>(
   }
 );
 
-export { StudentCardCorte }; // Export it as a named export
+export { StudentCardCorte };

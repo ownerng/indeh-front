@@ -172,6 +172,7 @@ export default function StudentDashboard() {
       }));
       const response = await StudentService.getBoletinGrade(
         gradoBoletin,
+        jornadaBoletin!,
         obsToSend,
         cicloBoletin,
         definitivas

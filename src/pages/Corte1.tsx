@@ -54,7 +54,12 @@ export default function Corte1() {
   // Obtener materias únicas
   const materias = Array.from(new Set(students.map(s => s.nombre_asignatura)));
 
-  // Filtrar y ordenar estudiantes
+  // Agregar función para crear key única
+  const createUniqueKey = (s: StudentsByTeacherId) => {
+    return `${s.nombre_asignatura}-${s.jornada}-${s.ciclo || 'sin-ciclo'}`;
+  };
+
+  // Filtrar y ordenar estudiantes (AGREGAR filtrado de duplicados)
   const filteredStudents = students
     .filter(s => selectedMateria ? s.nombre_asignatura === selectedMateria : true)
     .map(s => ({
@@ -63,7 +68,6 @@ export default function Corte1() {
         .filter(student => {
           const search = searchTerm.trim().toLowerCase();
           const nombre = student.nombres_apellidos.toLowerCase();
-          // Permite buscar por cualquier palabra del nombre o apellido
           return (
             search === "" ||
             nombre.split(" ").some(word => word.startsWith(search)) ||
@@ -72,8 +76,12 @@ export default function Corte1() {
         })
         .filter(student =>
           (selectedJornada ? s.jornada === selectedJornada : true) &&
-          (selectedGrado ? student.grado === selectedGrado : true)&&
+          (selectedGrado ? student.grado === selectedGrado : true) &&
           (selectedCiclo ? s.ciclo === selectedCiclo : true)
+        )
+        // AGREGAR: Eliminar duplicados por ID de estudiante
+        .filter((student, index, arr) => 
+          arr.findIndex(st => st.id === student.id) === index
         )
         .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos))
     }))
@@ -290,7 +298,7 @@ export default function Corte1() {
         {!loading && !error && (
           filteredStudents.length > 0 ? (
             filteredStudents.map(s => (
-              <div className="m-5" key={s.nombre_asignatura + s.jornada + (s.ciclo ?? 'sin ciclo')+Math.random()}>
+              <div className="m-5" key={createUniqueKey(s)}>
                 <h2 className="text-lg font-semibold text-gray-600 my-5">{s.nombre_asignatura} - {s.jornada.toUpperCase()} - {s.ciclo ?? 'sin ciclo'}</h2>
                 {
                   s.students.length > 0 ? (
@@ -298,7 +306,7 @@ export default function Corte1() {
                       {
                         s.students.map(student => (
                           <StudentCardCorte 
-                            key={student.id} 
+                            key={`${createUniqueKey(s)}-${student.id}`}
                             student={student} 
                             corte={1} 
                             onSaveGrade={handleSaveGrade}

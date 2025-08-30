@@ -122,11 +122,11 @@ export const StudentService = {
         }
     }
     
-    ,  async getBoletinGrade(grado: string, obse: Observaciones[], ciclo: string, is_final: boolean) {
+    ,  async getBoletinGrade(grado: string, jornada: Jornada,obse: Observaciones[], ciclo: string, is_final: boolean) {
         try {
             const response = await apiInstance.post(
                 ENDPOINTS.STUDENTS.BOLETINGRADE,
-                { grado, obse, ciclo, is_final },
+                { grado, obse, jornada, ciclo, is_final },
                 { responseType: 'blob' }
             );
             return response;

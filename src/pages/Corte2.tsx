@@ -54,7 +54,12 @@ export default function Corte2() {
   // Get unique subjects
   const materias = Array.from(new Set(students.map(s => s.nombre_asignatura)));
 
-  // Filter and sort students
+  // Agregar función para crear key única
+  const createUniqueKey = (s: StudentsByTeacherId) => {
+    return `${s.nombre_asignatura}-${s.jornada}-${s.ciclo || 'sin-ciclo'}`;
+  };
+
+  // Filter and sort students (AGREGAR filtrado de duplicados)
   const filteredStudents = students
     .filter(s => selectedMateria ? s.nombre_asignatura === selectedMateria : true)
     .map(s => ({
@@ -74,19 +79,28 @@ export default function Corte2() {
           (selectedGrado ? student.grado === selectedGrado : true) &&
           (selectedCiclo ? s.ciclo === selectedCiclo : true)
         )
+        // AGREGAR: Eliminar duplicados por ID de estudiante
+        .filter((student, index, arr) => 
+          arr.findIndex(st => st.id === student.id) === index
+        )
         .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos))
     }))
     .filter(s => s.students.length > 0);
 
+  // Corregir el handleSaveGrade para usar id_score
   const handleSaveGrade = async (id: number, grade: number) => {
     try {
       if (typeof grade === "number") {
-        const data: BodyCorte2 = { corte2: grade }; // Changed to BodyCorte2 and corte2
-        const response = await ScoresService.updateCorte2(id, data); // Changed to updateCorte2
+        // AGREGAR: Log para debugging
+        console.log(`Guardando nota Corte2 para ID_SCORE: ${id}, NOTA: ${grade}`);
+        
+        const data: BodyCorte2 = { corte2: grade };
+        const response = await ScoresService.updateCorte2(id, data);
+        console.log(`Nota Corte2 guardada para el estudiante con ID ${id}:`, response);
         return response.data;
       }
     } catch (error) {
-      // Error handling
+      console.error(`Error guardando nota Corte2 para ID ${id}:`, error);
       throw error;
     }
   };
@@ -95,7 +109,7 @@ export default function Corte2() {
   const handleSaveAll = async () => {
     const result = await Swal.fire({
       title: '¿Guardar todas las notas?',
-      text: 'Se guardarán todas las notas visibles del segundo corte.', // Updated text
+      text: 'Se guardarán todas las notas visibles del segundo corte.',
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -122,7 +136,7 @@ export default function Corte2() {
             const currentGrade = cardRef.getCurrentGrade();
             if (currentGrade !== null && currentGrade !== undefined && currentGrade >= 0) {
               gradesToSave.push({
-                id: student.id,
+                id: student.id_score, // CAMBIAR: usar id_score en lugar de id
                 grade: currentGrade,
                 studentName: student.nombres_apellidos
               });
@@ -288,7 +302,7 @@ export default function Corte2() {
         {!loading && !error && (
           filteredStudents.length > 0 ? (
             filteredStudents.map(s => (
-              <div className="m-5" key={s.nombre_asignatura + s.jornada + (s.ciclo ?? 'sin ciclo') + Math.random()}>
+              <div className="m-5" key={createUniqueKey(s)}>
                 <h2 className="text-lg font-semibold text-gray-600 my-5">{s.nombre_asignatura} - {s.jornada.toUpperCase()}</h2>
                 {
                   s.students.length > 0 ? (
@@ -296,7 +310,7 @@ export default function Corte2() {
                       {
                         s.students.map(student => (
                           <StudentCardCorte
-                            key={student.id}
+                            key={`${createUniqueKey(s)}-${student.id}`}
                             student={student}
                             corte={2} // Ensure this is set to 2 for Corte2
                             onSaveGrade={handleSaveGrade}

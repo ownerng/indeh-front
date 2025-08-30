@@ -1,11 +1,11 @@
-import { useEffect, useState, useRef } from "react"; // Added useRef
+import { useEffect, useState, useRef } from "react";
 import { StudentService } from "../api";
 import type { BodyCorte3, CicloResponse, StudentsByTeacherId } from "../types/global";
 import { StudentCardCorte } from "../components/StudentCardCorte";
 import { ScoresService } from "../services/scores.service";
 import { Jornada } from "../enums/Jornada";
 import { SubjectsService } from "../services/subjects.service";
-import Swal from "sweetalert2"; // Added Swal for alerts
+import Swal from "sweetalert2";
 
 export default function Corte3() {
   const [students, setStudents] = useState<StudentsByTeacherId[]>([]);
@@ -15,7 +15,7 @@ export default function Corte3() {
   const [selectedMateria, setSelectedMateria] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [savingAll, setSavingAll] = useState(false); // New state for saving all
+  const [savingAll, setSavingAll] = useState(false);
 
   const [ciclos, setCiclos] = useState<CicloResponse[]>([]);
   const [selectedCiclo, setSelectedCiclo] = useState<string>("");
@@ -53,7 +53,12 @@ export default function Corte3() {
   // Get unique subjects
   const materias = Array.from(new Set(students.map(s => s.nombre_asignatura)));
 
-  // Filter and sort students
+  // Agregar función para crear key única
+  const createUniqueKey = (s: StudentsByTeacherId) => {
+    return `${s.nombre_asignatura}-${s.jornada}-${s.ciclo || 'sin-ciclo'}`;
+  };
+
+  // Filter and sort students (AGREGAR filtrado de duplicados)
   const filteredStudents = students
     .filter(s => selectedMateria ? s.nombre_asignatura === selectedMateria : true)
     .map(s => ({
@@ -62,7 +67,6 @@ export default function Corte3() {
         .filter(student => {
           const search = searchTerm.trim().toLowerCase();
           const nombre = student.nombres_apellidos.toLowerCase();
-          // Allows searching by any word in the name or surname
           return (
             search === "" ||
             nombre.split(" ").some(word => word.startsWith(search)) ||
@@ -74,6 +78,10 @@ export default function Corte3() {
           (selectedGrado ? student.grado === selectedGrado : true) &&
           (selectedCiclo ? s.ciclo === selectedCiclo : true)
         )
+        // AGREGAR: Eliminar duplicados por ID de estudiante
+        .filter((student, index, arr) => 
+          arr.findIndex(st => st.id === student.id) === index
+        )
         .sort((a, b) => a.nombres_apellidos.localeCompare(b.nombres_apellidos))
     }))
     .filter(s => s.students.length > 0);
@@ -81,13 +89,17 @@ export default function Corte3() {
   const handleSaveGrade = async (id: number, grade: number) => {
     try {
       if (typeof grade === "number") {
-        const data: BodyCorte3 = { corte3: grade }; // Changed to BodyCorte3 and corte3
-        const response = await ScoresService.updateCorte3(id, data); // Changed to updateCorte3
+        // AGREGAR: Log para debugging
+        console.log(`Guardando nota Corte3 para ID_SCORE: ${id}, NOTA: ${grade}`);
+        
+        const data: BodyCorte3 = { corte3: grade };
+        const response = await ScoresService.updateCorte3(id, data);
+        console.log(`Nota Corte3 guardada para el estudiante con ID ${id}:`, response);
         return response.data;
       }
     } catch (error) {
-      // Error handling
-      throw error; // Re-throw the error to be caught by handleSaveAll
+      console.error(`Error guardando nota Corte3 para ID ${id}:`, error);
+      throw error;
     }
   }
 
@@ -95,7 +107,7 @@ export default function Corte3() {
   const handleSaveAll = async () => {
     const result = await Swal.fire({
       title: '¿Guardar todas las notas?',
-      text: 'Se guardarán todas las notas visibles del tercer corte.', // Updated text
+      text: 'Se guardarán todas las notas visibles del tercer corte.',
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -122,7 +134,7 @@ export default function Corte3() {
             const currentGrade = cardRef.getCurrentGrade();
             if (currentGrade !== null && currentGrade !== undefined && currentGrade >= 0) {
               gradesToSave.push({
-                id: student.id,
+                id: student.id_score, // CAMBIAR: usar id_score en lugar de id
                 grade: currentGrade,
                 studentName: student.nombres_apellidos
               });
@@ -288,7 +300,7 @@ export default function Corte3() {
         {!loading && !error && (
           filteredStudents.length > 0 ? (
             filteredStudents.map(s => (
-              <div className="m-5" key={s.nombre_asignatura + s.jornada + (s.ciclo ?? 'sin ciclo') + Math.random()}>
+              <div className="m-5" key={createUniqueKey(s)}>
                 <h2 className="text-lg font-semibold text-gray-600 my-5">{s.nombre_asignatura} - {s.jornada.toUpperCase()}</h2>
                 {
                   s.students.length > 0 ? (
@@ -296,11 +308,11 @@ export default function Corte3() {
                       {
                         s.students.map(student => (
                           <StudentCardCorte
-                            key={student.id}
+                            key={`${createUniqueKey(s)}-${student.id}`}
                             student={student}
-                            corte={3} // Ensure this is set to 3 for Corte3
+                            corte={3}
                             onSaveGrade={handleSaveGrade}
-                            ref={(ref) => registerStudentCardRef(student.id, ref)} // Added ref
+                            ref={(ref) => registerStudentCardRef(student.id, ref)}
                           />
                         ))
                       }
