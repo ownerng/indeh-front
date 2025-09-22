@@ -12,6 +12,7 @@ export const ENDPOINTS = {
         BOLETINGRADE : `/api/students/boletin`,
         EXCEL : `/api/students/excel`,
         UPDATEALLSCORES: '/api/students/update/scores/all',
+        PROFESSORVALORACION: '/api/students/professor/valoracion',
     },
     SCORES : {
         UPDATECORTE1 : (id: number) => `/api/scores/corte1/${id}`,

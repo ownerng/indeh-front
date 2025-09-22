@@ -144,5 +144,18 @@ export const StudentService = {
             console.error('Error updating all scores:', error);
             throw error;
         }
+    },
+
+    async getProfessorValoracion() {
+        try {
+            const response = await apiInstance.get(
+                ENDPOINTS.STUDENTS.PROFESSORVALORACION,
+                { responseType: 'blob' }
+            );
+            return response;
+        } catch (error) {
+            console.error('Error fetching professor valoracion:', error);
+            throw error;
+        }
     } 
 };
