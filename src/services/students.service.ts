@@ -157,6 +157,73 @@ export const StudentService = {
             console.error('Error fetching professor valoracion:', error);
             console.error('Error status:', error.response?.status);
             console.error('Error details:', error.response?.data || error.message);
+            
+            // Si es un error de red/CORS, intentar con fetch directo
+            if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+                console.log('Attempting fallback with fetch...');
+                try {
+                    const token = localStorage.getItem('token');
+                    const fetchResponse = await fetch(`https://capialti.shop${ENDPOINTS.STUDENTS.PROFESSORVALORACION}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/pdf, */*'
+                        },
+                    });
+                    
+                    if (!fetchResponse.ok) {
+                        throw new Error(`HTTP error! status: ${fetchResponse.status}`);
+                    }
+                    
+                    const blob = await fetchResponse.blob();
+                    return { data: blob, status: fetchResponse.status };
+                } catch (fetchError) {
+                    console.error('Fetch fallback also failed:', fetchError);
+                    throw error; // Throw the original error
+                }
+            }
+            
+            throw error;
+        }
+    },
+
+    async getProfessorValoracionById(professorId: number) {
+        try {
+            const response = await apiInstance.get(
+                ENDPOINTS.STUDENTS.PROFESSORVALORACIONBYID(professorId),
+                { responseType: 'blob' }
+            );
+            return response;
+        } catch (error: any) {
+            console.error('Error fetching professor valoracion by id:', error);
+            console.error('Error status:', error.response?.status);
+            console.error('Error details:', error.response?.data || error.message);
+            
+            // Si es un error de red/CORS, intentar con fetch directo
+            if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+                console.log('Attempting fallback with fetch...');
+                try {
+                    const token = localStorage.getItem('token');
+                    const fetchResponse = await fetch(`https://capialti.shop${ENDPOINTS.STUDENTS.PROFESSORVALORACIONBYID(professorId)}`, {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/pdf, */*'
+                        },
+                    });
+                    
+                    if (!fetchResponse.ok) {
+                        throw new Error(`HTTP error! status: ${fetchResponse.status}`);
+                    }
+                    
+                    const blob = await fetchResponse.blob();
+                    return { data: blob, status: fetchResponse.status };
+                } catch (fetchError) {
+                    console.error('Fetch fallback also failed:', fetchError);
+                    throw error; // Throw the original error
+                }
+            }
+            
             throw error;
         }
     } 

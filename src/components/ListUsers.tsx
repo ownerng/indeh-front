@@ -17,6 +17,22 @@ export const ListUsers = ({ users, loading, error, fetchUsers }: ListUsersProps)
 
   }, [fetchUsers]);
 
+  // Función para probar la conectividad antes de la descarga
+  const testConnection = async () => {
+    try {
+      const response = await fetch('https://capialti.shop/api/students/', {
+        method: 'HEAD',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Connection test failed:', error);
+      return false;
+    }
+  };
+
   const handleDownloadValoraciones = async () => {
     try {
       setIsDownloading(true);
@@ -28,7 +44,20 @@ export const ListUsers = ({ users, loading, error, fetchUsers }: ListUsersProps)
         return;
       }
       
+      // Probar la conectividad antes de intentar la descarga
+      console.log('Testing connection...');
+      const connectionOk = await testConnection();
+      if (!connectionOk) {
+        alert('Error: No se puede establecer conexión con el servidor. Verifica tu conexión e intenta nuevamente.');
+        return;
+      }
+      
+      // Log información de debugging
       console.log('Attempting to download valoraciones...');
+      console.log('Token length:', token.length);
+      console.log('Current origin:', window.location.origin);
+      console.log('Target URL:', 'https://capialti.shop/api/students/professor/valoracion');
+      
       const response = await StudentService.getProfessorValoracion();
       console.log('Response received:', response.status);
       
@@ -46,12 +75,33 @@ export const ListUsers = ({ users, loading, error, fetchUsers }: ListUsersProps)
       console.log('Download completed successfully');
     } catch (error: any) {
       console.error('Error downloading valoraciones:', error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        name: error.name,
+        responseStatus: error.response?.status,
+        requestStatus: error.request?.status,
+        requestReadyState: error.request?.readyState
+      });
       
       let errorMessage = 'Error al descargar las valoraciones';
       
       if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
-        if (error.request?.status === 504) {
-          errorMessage = 'Error: El servidor está tardando demasiado en procesar la solicitud. El reporte es muy grande, por favor intenta nuevamente en unos minutos.';
+        // Verificar si es un problema de CORS
+        const isCorsError = error.message.includes('CORS') || 
+                           error.message.includes('Access-Control-Allow-Origin') ||
+                           (error.request?.readyState === 4 && !error.response);
+        
+        // Verificar si es un timeout específico del gateway
+        const errorStack = error.stack || '';
+        const isGatewayTimeout = errorStack.includes('504') || 
+                               error.request?.status === 504 ||
+                               errorStack.includes('Gateway Time-out');
+        
+        if (isCorsError) {
+          errorMessage = 'Error de CORS: El servidor no está permitiendo la conexión desde este dominio. Esto puede ser un problema temporal del servidor. Por favor, contacta al administrador o intenta nuevamente más tarde.';
+        } else if (isGatewayTimeout) {
+          errorMessage = 'Error: El servidor está procesando un reporte muy grande y el gateway se agotó el tiempo de espera. El archivo probablemente se generó correctamente en el servidor. Por favor, contacta al administrador para obtener el archivo o intenta nuevamente más tarde.';
         } else {
           errorMessage = 'Error de conexión. Verifica tu conexión a internet e intenta nuevamente.';
         }
@@ -78,7 +128,7 @@ export const ListUsers = ({ users, loading, error, fetchUsers }: ListUsersProps)
     <>
       {/* Overlay de carga que bloquea toda la interfaz */}
       {isDownloading && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-8 rounded-lg shadow-xl max-w-md mx-4 text-center">
             <div className="flex justify-center mb-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -87,7 +137,7 @@ export const ListUsers = ({ users, loading, error, fetchUsers }: ListUsersProps)
               Generando valoraciones de profesores
             </h3>
             <p className="text-gray-600 mb-4">
-              Este proceso puede tardar varios minutos debido al volumen de información.
+              Este proceso puede tardar hasta 15 minutos debido al volumen de información.
               Por favor, no cierre la ventana ni navegue a otra página.
             </p>
             <div className="text-sm text-gray-500">
@@ -114,7 +164,7 @@ export const ListUsers = ({ users, loading, error, fetchUsers }: ListUsersProps)
               ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
               : 'bg-blue-500 hover:bg-blue-600 text-white'
           }`}
-          title="Este proceso puede tardar varios minutos debido al volumen de información"
+          title="Este proceso puede tardar hasta 15 minutos debido al volumen de información"
         >
           {isDownloading ? 'Descargando... (Esto puede tardar varios minutos)' : 'Sacar valoraciones de cada profesor'}
         </button>
