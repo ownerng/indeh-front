@@ -153,8 +153,10 @@ export const StudentService = {
                 { responseType: 'blob' }
             );
             return response;
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error fetching professor valoracion:', error);
+            console.error('Error status:', error.response?.status);
+            console.error('Error details:', error.response?.data || error.message);
             throw error;
         }
     } 

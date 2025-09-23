@@ -2,7 +2,7 @@ import axios from 'axios';
 
 export const apiInstance = axios.create({
   baseURL: 'https://capialti.shop',  // Ajusta según tu configuración
-  timeout: 300000,  // Aumentado para archivos grandes
+  timeout: 480000,  // 8 minutos - Para reportes con mucha información
   headers: {
     'Content-Type': 'application/json',
     'Accept': '*/*',
