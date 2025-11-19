@@ -187,15 +187,15 @@ export const StudentService = {
         }
     },
 
-    async getProfessorValoracionById(professorId: number) {
+    async getSubjectValoracionById(subjectId: number) {
         try {
             const response = await apiInstance.get(
-                ENDPOINTS.STUDENTS.PROFESSORVALORACIONBYID(professorId),
+                ENDPOINTS.STUDENTS.SUBJECTVALORACIONBYID(subjectId),
                 { responseType: 'blob' }
             );
             return response;
         } catch (error: any) {
-            console.error('Error fetching professor valoracion by id:', error);
+            console.error('Error fetching subject valoracion by id:', error);
             console.error('Error status:', error.response?.status);
             console.error('Error details:', error.response?.data || error.message);
             
@@ -204,7 +204,7 @@ export const StudentService = {
                 console.log('Attempting fallback with fetch...');
                 try {
                     const token = localStorage.getItem('token');
-                    const fetchResponse = await fetch(`https://capialti.shop${ENDPOINTS.STUDENTS.PROFESSORVALORACIONBYID(professorId)}`, {
+                    const fetchResponse = await fetch(`https://capialti.shop${ENDPOINTS.STUDENTS.SUBJECTVALORACIONBYID(subjectId)}`, {
                         method: 'GET',
                         headers: {
                             'Authorization': `Bearer ${token}`,

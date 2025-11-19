@@ -13,7 +13,7 @@ export const ENDPOINTS = {
         EXCEL : `/api/students/excel`,
         UPDATEALLSCORES: '/api/students/update/scores/all',
         PROFESSORVALORACION: '/api/students/professor/valoracion',
-        PROFESSORVALORACIONBYID: (id: number) => `/api/students/professor/valoracion/${id}`,
+        SUBJECTVALORACIONBYID: (id: number) => `/api/students/professor/valoracion/${id}`,
     },
     SCORES : {
         UPDATECORTE1 : (id: number) => `/api/scores/corte1/${id}`,
